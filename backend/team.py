@@ -2,35 +2,26 @@
 from autogen_agentchat.agents import AssistantAgent
 from autogen_agentchat.teams import RoundRobinGroupChat
 from autogen_agentchat.conditions import TextMentionTermination, MaxMessageTermination
-from autogen_ext.models.openai import AzureOpenAIChatCompletionClient
+from autogen_ext.models.openai import OpenAIChatCompletionClient
 from app.config import settings
 from app.agents.tools import duckduckgo_tool, calendar_tool
 
 def build_orchestrai_team():
-    # 1. The Brain (Planner) - GPT-4o
-    planner_client = AzureOpenAIChatCompletionClient(
-        azure_deployment=settings.DEPLOYMENT_PLANNER,
-        model="gpt-4o",
-        api_version=settings.AZURE_OPENAI_API_VERSION,
-        azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,
-        api_key=settings.AZURE_OPENAI_API_KEY
+    # We are using Gemini as a proxy for all agents
+    gemini_client = OpenAIChatCompletionClient(
+        model=settings.GEMINI_MODEL,
+        api_key=settings.GEMINI_API_KEY,
+        base_url=settings.GEMINI_BASE_URL,
     )
     
-    # 2. The Workhorse (Researcher/Reviewer) - GPT-4o-mini
-    workhorse_client = AzureOpenAIChatCompletionClient(
-        azure_deployment=settings.DEPLOYMENT_WORKHORSE,
-        model="gpt-4o-mini",
-        api_version=settings.AZURE_OPENAI_API_VERSION,
-        azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,
-        api_key=settings.AZURE_OPENAI_API_KEY
-    )
+    # 1. The Brain (Planner)
+    planner_client = gemini_client
+    
+    # 2. The Workhorse (Researcher/Reviewer)
+    workhorse_client = gemini_client
 
-    # 3. The Hands (Executor) - Phi-3.5 via AI Foundry Serverless
-    executor_client = AzureOpenAIChatCompletionClient(
-        model="Phi-3.5-mini-instruct",
-        azure_endpoint=settings.PHI3_ENDPOINT,
-        api_key=settings.PHI3_API_KEY
-    )
+    # 3. The Hands (Executor)
+    executor_client = gemini_client
 
     # -- Define Agents --
     planner = AssistantAgent(

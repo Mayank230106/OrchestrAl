@@ -2,18 +2,10 @@
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
-    # Azure OpenAI Tiered Endpoints
-    AZURE_OPENAI_ENDPOINT: str
-    AZURE_OPENAI_API_KEY: str
-    AZURE_OPENAI_API_VERSION: str = "2024-08-01-preview"
-    
-    # Model Deployments
-    DEPLOYMENT_PLANNER: str = "gpt-4o"
-    DEPLOYMENT_WORKHORSE: str = "gpt-4o-mini"
-    
-    # Azure AI Foundry Serverless (Phi-3.5)
-    PHI3_ENDPOINT: str
-    PHI3_API_KEY: str
+    # Gemini API Configuration (Proxy mode)
+    GEMINI_API_KEY: str
+    GEMINI_BASE_URL: str = "https://generativelanguage.googleapis.com/v1beta/openai/"
+    GEMINI_MODEL: str = "gemini-1.5-flash"
     
     # Azure Infrastructure
     COSMOS_DB_ENDPOINT: str
