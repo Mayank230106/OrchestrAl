@@ -1,0 +1,1 @@
+# Definitions for DuckDuckGo and Outlook tools

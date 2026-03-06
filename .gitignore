@@ -1,0 +1,25 @@
+# Environments
+.env
+
+# __pycache__
+__pycache__/
+*.py[cod]
+*$py.class
+
+# venv
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDES
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node
+node_modules/
+dist/
+build/
