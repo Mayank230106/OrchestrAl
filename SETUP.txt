@@ -1,0 +1,113 @@
+================================================================================
+  OrchestrAI — Setup Reference
+  Environment Variables & Python Requirements
+================================================================================
+
+────────────────────────────────────────────────────────────────────────────────
+  ENVIRONMENT VARIABLES  (.env)
+  Copy this structure into a file named exactly: .env
+  Place it in the project root alongside backend/ and frontend/
+────────────────────────────────────────────────────────────────────────────────
+
+# ── Gemini API Keys (one per agent to spread rate-limit quota) ──────────────
+#    Create free keys at: https://aistudio.google.com/apikey
+#    Using one key for all four agents will work, but hits quotas faster.
+
+GEMINI_API_KEY_PLANNER="your_planner_gemini_key"
+GEMINI_API_KEY_RESEARCHER="your_researcher_gemini_key"
+GEMINI_API_KEY_EXECUTOR="your_executor_gemini_key"
+GEMINI_API_KEY_REVIEWER="your_reviewer_gemini_key"
+
+
+# ── Azure Cosmos DB (Serverless mode recommended) ───────────────────────────
+#    Portal: https://portal.azure.com → Cosmos DB → Keys
+#    Endpoint format: https://<account-name>.documents.azure.com:443/
+
+COSMOS_DB_ENDPOINT="https://<your-account>.documents.azure.com:443/"
+COSMOS_DB_KEY="<primary-or-secondary-key-from-portal>"
+
+
+# ── Azure Service Bus ────────────────────────────────────────────────────────
+#    Portal: Shared Access Policies → RootManageSharedAccessKey → Primary Connection String
+#    Format: Endpoint=sb://<namespace>.servicebus.windows.net/;SharedAccessKeyName=...
+
+SERVICE_BUS_CONNECTION_STRING="Endpoint=sb://<namespace>.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=<key>"
+
+
+# ── Azure OpenAI (optional – GPT-4o / GPT-4o-mini) ─────────────────────────
+#    Needed only if you switch agents away from the Gemini proxy.
+
+AZURE_OPENAI_ENDPOINT="https://<resource>.openai.azure.com/"
+AZURE_OPENAI_API_KEY="<your-azure-openai-key>"
+
+
+# ── Azure AI Foundry (optional – Phi-3.5) ───────────────────────────────────
+#    Needed only if you add a Phi-3.5 agent.
+
+PHI3_ENDPOINT="https://<phi-resource>.services.ai.azure.com/v1"
+PHI3_API_KEY="<your-phi-key>"
+
+
+────────────────────────────────────────────────────────────────────────────────
+  AZURE INFRASTRUCTURE CHECKLIST
+────────────────────────────────────────────────────────────────────────────────
+
+  [ ] Cosmos DB account created (Serverless tier)
+      └── Database name : orchestrai_db      (auto-created on first run)
+      └── Container name: workflow_states    (auto-created on first run)
+      └── Partition key : /session_id
+
+  [ ] Service Bus namespace created
+      └── Queue name    : agent-tasks        (must be created manually in portal)
+      └── SAS Policy    : RootManageSharedAccessKey (Send + Listen permissions)
+
+
+────────────────────────────────────────────────────────────────────────────────
+  PYTHON REQUIREMENTS  (backend/requirements.txt)
+  Install with: pip install -r backend/requirements.txt
+────────────────────────────────────────────────────────────────────────────────
+
+uvicorn==0.30.1
+pydantic==2.7.4
+pydantic-settings==2.3.4
+autogen-agentchat>=0.4.0
+autogen-ext[openai,azure]>=0.4.0
+autogen-core>=0.4.0
+azure-cosmos==4.7.0
+azure-servicebus==7.12.2
+azure-identity==1.16.0
+duckduckgo-search==6.1.7
+
+
+────────────────────────────────────────────────────────────────────────────────
+  FRONTEND REQUIREMENTS  (frontend/)
+  Install with: npm install  (inside the frontend/ directory)
+────────────────────────────────────────────────────────────────────────────────
+
+  Node.js  >= 18
+  React    ^18
+  Vite     ^5
+  lucide-react (icon library)
+
+  Start dev server: npm run dev      → http://localhost:5173
+
+
+────────────────────────────────────────────────────────────────────────────────
+  HOW TO RUN (from the project root)
+────────────────────────────────────────────────────────────────────────────────
+
+  1. Install backend deps
+     > pip install -r backend/requirements.txt
+
+  2. Start the FastAPI gateway (terminal 1)
+     > python -m uvicorn backend.main:app --port 8000
+
+  3. Start the background worker (terminal 2)
+     > python -m backend.worker
+
+  4. Start the React frontend (terminal 3, inside frontend/)
+     > npm run dev
+
+  API docs available at: http://localhost:8000/docs
+
+================================================================================
