@@ -1,18 +1,19 @@
 # Loads environment variables
 from pydantic_settings import BaseSettings
+from typing import Optional
 
 class Settings(BaseSettings):
     # Groq API Configuration
     GROQ_API_KEY_1: str
-    GROQ_MODEL_1: str = "openai/gpt-oss-120b"
+    GROQ_MODEL_1: str = "openai/gpt-oss-20b"
     GROQ_API_KEY_2: str
     GROQ_MODEL_2: str = "llama-3.3-70b-versatile"
     GROQ_BASE_URL: str = "https://api.groq.com/openai/v1"
     
-    # Azure Phi-4 LLM
-    PHI4_API_KEY: str
-    PHI4_ENDPOINT: str
-    PHI4_TARGET_URI: str
+    # Azure Phi-4 LLM (optional - not required for core workflow)
+    PHI4_API_KEY: Optional[str] = None
+    PHI4_ENDPOINT: Optional[str] = None
+    PHI4_TARGET_URI: Optional[str] = None
     PHI4_MODEL: str = "phi-4"
     
     # Azure Infrastructure

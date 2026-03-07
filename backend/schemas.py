@@ -19,3 +19,12 @@ class ApprovalRequest(BaseModel):
     session_id: str
     approved: bool
     feedback: Optional[str] = None
+
+# Add this to schemas.py
+class UserProfile(BaseModel):
+    user_id: str = "default_user" # Hardcoded for MVP, link to Entra ID later
+    full_name: str
+    github_username: str
+    github_url: str
+    bio: str
+    skills: List[str]
