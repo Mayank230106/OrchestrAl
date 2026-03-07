@@ -9,12 +9,12 @@ from backend.tools import duckduckgo_tool, calendar_tool
 def build_orchestrai_team():
     # model_info is required for non-OpenAI model names
     from autogen_core.models import ModelInfo
-
-    def make_client(api_key: str) -> OpenAIChatCompletionClient:
+    
+    def make_client(api_key: str, model_name: str) -> OpenAIChatCompletionClient:
         return OpenAIChatCompletionClient(
-            model=settings.GEMINI_MODEL,
+            model=model_name,
             api_key=api_key,
-            base_url=settings.GEMINI_BASE_URL,
+            base_url=settings.GROQ_BASE_URL,
             model_info=ModelInfo(
                 vision=False,
                 function_calling=True,
@@ -24,11 +24,13 @@ def build_orchestrai_team():
             ),
         )
 
-    # Each agent gets its own key to distribute rate limits
-    planner_client   = make_client(settings.GEMINI_API_KEY_PLANNER)
-    researcher_client = make_client(settings.GEMINI_API_KEY_RESEARCHER)
-    executor_client  = make_client(settings.GEMINI_API_KEY_EXECUTOR)
-    reviewer_client  = make_client(settings.GEMINI_API_KEY_REVIEWER)
+    # Model 1: gpt-oss-120b (Researcher / Executor)
+    # Model 2: llama-3.3-70b-versatile (Planner / Reviewer)
+    planner_client    = make_client(settings.GROQ_API_KEY_2, settings.GROQ_MODEL_2)
+    reviewer_client   = make_client(settings.GROQ_API_KEY_2, settings.GROQ_MODEL_2)
+    
+    researcher_client = make_client(settings.GROQ_API_KEY_1, settings.GROQ_MODEL_1)
+    executor_client   = make_client(settings.GROQ_API_KEY_1, settings.GROQ_MODEL_1)
 
     # -- Define Agents --
     planner = AssistantAgent(
@@ -58,9 +60,9 @@ def build_orchestrai_team():
     )
 
     # -- Terminations --
-    # Stop if the Reviewer calls for HITL, or as a fallback stop after 15 messages to save tokens.
+    # Stop if the Reviewer calls for HITL, or as a fallback stop after 5 messages to save tokens.
     hitl_termination = TextMentionTermination("STATUS: PENDING_APPROVAL")
-    fallback_termination = MaxMessageTermination(max_messages=15)
+    fallback_termination = MaxMessageTermination(max_messages=5)
     termination_condition = hitl_termination | fallback_termination
 
     # -- Create Team --
