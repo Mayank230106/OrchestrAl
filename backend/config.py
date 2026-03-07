@@ -2,10 +2,18 @@
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
-    # Gemini API Configuration (Proxy mode)
-    GEMINI_API_KEY: str
-    GEMINI_BASE_URL: str = "https://generativelanguage.googleapis.com/v1beta/openai/"
-    GEMINI_MODEL: str = "gemini-1.5-flash"
+    # Groq API Configuration
+    GROQ_API_KEY_1: str
+    GROQ_MODEL_1: str = "openai/gpt-oss-120b"
+    GROQ_API_KEY_2: str
+    GROQ_MODEL_2: str = "llama-3.3-70b-versatile"
+    GROQ_BASE_URL: str = "https://api.groq.com/openai/v1"
+    
+    # Azure Phi-4 LLM
+    PHI4_API_KEY: str
+    PHI4_ENDPOINT: str
+    PHI4_TARGET_URI: str
+    PHI4_MODEL: str = "phi-4"
     
     # Azure Infrastructure
     COSMOS_DB_ENDPOINT: str
@@ -18,5 +26,6 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
+        extra = "ignore"
 
 settings = Settings()

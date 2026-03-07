@@ -2,9 +2,9 @@
 import asyncio
 import json
 from azure.servicebus.aio import ServiceBusClient
-from app.config import settings
-from app.services.cosmos_db import db_service
-from app.agents.team import build_orchestrai_team
+from backend.config import settings
+from backend.database import db_service
+from backend.team import build_orchestrai_team
 
 async def process_message(msg_payload: dict):
     session_id = msg_payload["session_id"]
@@ -20,7 +20,7 @@ async def process_message(msg_payload: dict):
 
     # 3. Restore memory if resuming
     if db_state.get("autogen_state"):
-        team.load_state(db_state["autogen_state"])
+        await team.load_state(db_state["autogen_state"])
 
     # 4. Determine Task
     task_input = msg_payload.get("prompt") if action == "START" else msg_payload.get("feedback")
@@ -30,10 +30,20 @@ async def process_message(msg_payload: dict):
         # Run the workflow. It will yield messages until termination condition hits.
         async for event in team.run_stream(task=task_input):
             if hasattr(event, 'source') and hasattr(event, 'content'):
+                
+                # Helper to handle non-serializable AutoGen objects like FunctionCall
+                def safe_serialize(obj):
+                    if isinstance(obj, str): return obj
+                    if isinstance(obj, dict): return {k: safe_serialize(v) for k, v in obj.items()}
+                    if isinstance(obj, list): return [safe_serialize(i) for i in obj]
+                    if hasattr(obj, 'model_dump'): return obj.model_dump()
+                    if hasattr(obj, '__dict__'): return safe_serialize(obj.__dict__)
+                    return str(obj)
+
                 # Append to Cosmos chat history for React UI to poll
                 db_state["chat_history"].append({
                     "agent": event.source,
-                    "content": event.content,
+                    "content": safe_serialize(event.content),
                     "type": type(event).__name__
                 })
                 await db_service.save_state(db_state)
@@ -50,7 +60,7 @@ async def process_message(msg_payload: dict):
         db_state["chat_history"].append({"agent": "System", "content": f"Fatal Error: {str(e)}"})
 
     # 7. Save Final Checkpoint
-    db_state["autogen_state"] = team.save_state()
+    db_state["autogen_state"] = await team.save_state()
     await db_service.save_state(db_state)
 
 

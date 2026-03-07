@@ -3,25 +3,34 @@ from autogen_agentchat.agents import AssistantAgent
 from autogen_agentchat.teams import RoundRobinGroupChat
 from autogen_agentchat.conditions import TextMentionTermination, MaxMessageTermination
 from autogen_ext.models.openai import OpenAIChatCompletionClient
-from app.config import settings
-from app.agents.tools import duckduckgo_tool, calendar_tool
+from backend.config import settings
+from backend.tools import duckduckgo_tool, calendar_tool
 
 def build_orchestrai_team():
-    # We are using Gemini as a proxy for all agents
-    gemini_client = OpenAIChatCompletionClient(
-        model=settings.GEMINI_MODEL,
-        api_key=settings.GEMINI_API_KEY,
-        base_url=settings.GEMINI_BASE_URL,
-    )
+    # model_info is required for non-OpenAI model names
+    from autogen_core.models import ModelInfo
     
-    # 1. The Brain (Planner)
-    planner_client = gemini_client
-    
-    # 2. The Workhorse (Researcher/Reviewer)
-    workhorse_client = gemini_client
+    def make_client(api_key: str, model_name: str) -> OpenAIChatCompletionClient:
+        return OpenAIChatCompletionClient(
+            model=model_name,
+            api_key=api_key,
+            base_url=settings.GROQ_BASE_URL,
+            model_info=ModelInfo(
+                vision=False,
+                function_calling=True,
+                json_output=True,
+                family="unknown",
+                structured_output=False,
+            ),
+        )
 
-    # 3. The Hands (Executor)
-    executor_client = gemini_client
+    # Model 1: gpt-oss-120b (Researcher / Executor)
+    # Model 2: llama-3.3-70b-versatile (Planner / Reviewer)
+    planner_client    = make_client(settings.GROQ_API_KEY_2, settings.GROQ_MODEL_2)
+    reviewer_client   = make_client(settings.GROQ_API_KEY_2, settings.GROQ_MODEL_2)
+    
+    researcher_client = make_client(settings.GROQ_API_KEY_1, settings.GROQ_MODEL_1)
+    executor_client   = make_client(settings.GROQ_API_KEY_1, settings.GROQ_MODEL_1)
 
     # -- Define Agents --
     planner = AssistantAgent(
@@ -32,7 +41,7 @@ def build_orchestrai_team():
 
     researcher = AssistantAgent(
         name="Researcher",
-        model_client=workhorse_client,
+        model_client=researcher_client,
         tools=[duckduckgo_tool],
         system_message="You are the Context Gatherer. Use search tools to find facts. Return clear data for the Executor to use."
     )
@@ -46,14 +55,14 @@ def build_orchestrai_team():
 
     reviewer = AssistantAgent(
         name="Reviewer",
-        model_client=workhorse_client,
+        model_client=reviewer_client,
         system_message="You are Quality Control. Review the Executor's output. If correct and ready for human approval, strictly output exactly 'STATUS: PENDING_APPROVAL'. If flawed, provide feedback for the Executor."
     )
 
     # -- Terminations --
-    # Stop if the Reviewer calls for HITL, or as a fallback stop after 15 messages to save tokens.
+    # Stop if the Reviewer calls for HITL, or as a fallback stop after 5 messages to save tokens.
     hitl_termination = TextMentionTermination("STATUS: PENDING_APPROVAL")
-    fallback_termination = MaxMessageTermination(max_messages=15)
+    fallback_termination = MaxMessageTermination(max_messages=5)
     termination_condition = hitl_termination | fallback_termination
 
     # -- Create Team --
