@@ -1,15 +1,25 @@
 # The FastAPI endpoints
 from fastapi import FastAPI, HTTPException, BackgroundTasks
-from app.schemas import TaskRequest, WorkflowState, ApprovalRequest
-from app.services.cosmos_db import db_service
+from backend.schemas import TaskRequest, WorkflowState, ApprovalRequest
+from backend.database import db_service
 from azure.servicebus.aio import ServiceBusClient
 from azure.servicebus import ServiceBusMessage
-from app.config import settings
+from backend.config import settings
 import uuid
 import datetime
 import json
 
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI(title="OrchestrAI API Gateway")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # Since it's for local development
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.on_event("startup")
 async def startup_event():

@@ -3,25 +3,32 @@ from autogen_agentchat.agents import AssistantAgent
 from autogen_agentchat.teams import RoundRobinGroupChat
 from autogen_agentchat.conditions import TextMentionTermination, MaxMessageTermination
 from autogen_ext.models.openai import OpenAIChatCompletionClient
-from app.config import settings
-from app.agents.tools import duckduckgo_tool, calendar_tool
+from backend.config import settings
+from backend.tools import duckduckgo_tool, calendar_tool
 
 def build_orchestrai_team():
-    # We are using Gemini as a proxy for all agents
-    gemini_client = OpenAIChatCompletionClient(
-        model=settings.GEMINI_MODEL,
-        api_key=settings.GEMINI_API_KEY,
-        base_url=settings.GEMINI_BASE_URL,
-    )
-    
-    # 1. The Brain (Planner)
-    planner_client = gemini_client
-    
-    # 2. The Workhorse (Researcher/Reviewer)
-    workhorse_client = gemini_client
+    # model_info is required for non-OpenAI model names
+    from autogen_core.models import ModelInfo
 
-    # 3. The Hands (Executor)
-    executor_client = gemini_client
+    def make_client(api_key: str) -> OpenAIChatCompletionClient:
+        return OpenAIChatCompletionClient(
+            model=settings.GEMINI_MODEL,
+            api_key=api_key,
+            base_url=settings.GEMINI_BASE_URL,
+            model_info=ModelInfo(
+                vision=False,
+                function_calling=True,
+                json_output=True,
+                family="unknown",
+                structured_output=False,
+            ),
+        )
+
+    # Each agent gets its own key to distribute rate limits
+    planner_client   = make_client(settings.GEMINI_API_KEY_PLANNER)
+    researcher_client = make_client(settings.GEMINI_API_KEY_RESEARCHER)
+    executor_client  = make_client(settings.GEMINI_API_KEY_EXECUTOR)
+    reviewer_client  = make_client(settings.GEMINI_API_KEY_REVIEWER)
 
     # -- Define Agents --
     planner = AssistantAgent(
@@ -32,7 +39,7 @@ def build_orchestrai_team():
 
     researcher = AssistantAgent(
         name="Researcher",
-        model_client=workhorse_client,
+        model_client=researcher_client,
         tools=[duckduckgo_tool],
         system_message="You are the Context Gatherer. Use search tools to find facts. Return clear data for the Executor to use."
     )
@@ -46,7 +53,7 @@ def build_orchestrai_team():
 
     reviewer = AssistantAgent(
         name="Reviewer",
-        model_client=workhorse_client,
+        model_client=reviewer_client,
         system_message="You are Quality Control. Review the Executor's output. If correct and ready for human approval, strictly output exactly 'STATUS: PENDING_APPROVAL'. If flawed, provide feedback for the Executor."
     )
 

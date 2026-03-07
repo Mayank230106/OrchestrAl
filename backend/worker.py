@@ -2,9 +2,9 @@
 import asyncio
 import json
 from azure.servicebus.aio import ServiceBusClient
-from app.config import settings
-from app.services.cosmos_db import db_service
-from app.agents.team import build_orchestrai_team
+from backend.config import settings
+from backend.database import db_service
+from backend.team import build_orchestrai_team
 
 async def process_message(msg_payload: dict):
     session_id = msg_payload["session_id"]
@@ -20,7 +20,7 @@ async def process_message(msg_payload: dict):
 
     # 3. Restore memory if resuming
     if db_state.get("autogen_state"):
-        team.load_state(db_state["autogen_state"])
+        await team.load_state(db_state["autogen_state"])
 
     # 4. Determine Task
     task_input = msg_payload.get("prompt") if action == "START" else msg_payload.get("feedback")
@@ -50,7 +50,7 @@ async def process_message(msg_payload: dict):
         db_state["chat_history"].append({"agent": "System", "content": f"Fatal Error: {str(e)}"})
 
     # 7. Save Final Checkpoint
-    db_state["autogen_state"] = team.save_state()
+    db_state["autogen_state"] = await team.save_state()
     await db_service.save_state(db_state)
 
 

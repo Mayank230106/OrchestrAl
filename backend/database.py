@@ -1,7 +1,7 @@
 # Handles reading/writing to Azure Cosmos DB
 from azure.cosmos.aio import CosmosClient
 from azure.cosmos import PartitionKey
-from app.config import settings
+from backend.config import settings
 import datetime
 
 class CosmosDBService:
