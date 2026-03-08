@@ -4,10 +4,12 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     # Groq API Configuration
     GROQ_API_KEY_1: str
-    GROQ_MODEL_1: str = "openai/gpt-oss-120b"
+    GROQ_MODEL_1: str = "llama-3.3-70b-versatile"
     GROQ_API_KEY_2: str
     GROQ_MODEL_2: str = "llama-3.3-70b-versatile"
+    FINALIZER_MODEL: str = "qwen/qwen3-32b"
     GROQ_BASE_URL: str = "https://api.groq.com/openai/v1"
+    SERPER_API_KEY: str = ""
     
     # Azure Phi-4 LLM
     PHI4_API_KEY: str
