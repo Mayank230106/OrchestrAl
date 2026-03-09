@@ -3,11 +3,11 @@ const BASE_URL = '/api';
 
 // ─── Workflow ───────────────────────────────────────────────────────────────
 
-export async function startWorkflow(prompt) {
+export async function startWorkflow(prompt, enabled_mcps = []) {
   const res = await fetch(`${BASE_URL}/workflow/start`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ prompt }),
+    body: JSON.stringify({ prompt, enabled_mcps }),
   });
   if (!res.ok) throw new Error(`Failed to start workflow: ${res.statusText}`);
   return res.json(); // { session_id, status }
@@ -43,6 +43,14 @@ export async function getWorkflowDetail(sessionId) {
   return res.json(); // full state including chat_history
 }
 
+export async function deleteWorkflow(sessionId) {
+  const res = await fetch(`${BASE_URL}/workflow/${sessionId}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) throw new Error(`Failed to delete workflow: ${res.statusText}`);
+  return res.json();
+}
+
 // ─── Logs ─────────────────────────────────────────────────────────────────────
 
 export async function getRecentLogs() {
@@ -67,5 +75,32 @@ export async function updateProfile(profileData) {
     body: JSON.stringify(profileData),
   });
   if (!res.ok) throw new Error(`Failed to update profile: ${res.statusText}`);
+  return res.json();
+}
+
+// ─── MCP Settings ─────────────────────────────────────────────────────────────
+
+export async function getMcpConfigs() {
+  const res = await fetch(`${BASE_URL}/mcp`);
+  if (!res.ok) throw new Error(`Failed to fetch MCP configs: ${res.statusText}`);
+  const data = await res.json();
+  return data.configs || [];
+}
+
+export async function saveMcpConfig(configData) {
+  const res = await fetch(`${BASE_URL}/mcp`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(configData),
+  });
+  if (!res.ok) throw new Error(`Failed to save MCP config: ${res.statusText}`);
+  return res.json();
+}
+
+export async function deleteMcpConfig(mcpId) {
+  const res = await fetch(`${BASE_URL}/mcp/${mcpId}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) throw new Error(`Failed to delete MCP config: ${res.statusText}`);
   return res.json();
 }

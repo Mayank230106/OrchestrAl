@@ -5,7 +5,7 @@ import Navbar from '../components/Navbar';
 import Chat from '../components/Chat';
 import Active from '../components/Active';
 import CommandLine from '../components/CommandLine';
-import { startWorkflow, streamWorkflow, approveWorkflow } from '../lib/api';
+import { startWorkflow, streamWorkflow, approveWorkflow, getMcpConfigs } from '../lib/api';
 
 const Dashboard = () => {
   const [activeStep, setActiveStep] = useState(-1);
@@ -20,7 +20,7 @@ const Dashboard = () => {
   // [{ role: 'user' | 'system', content: string, isHitlPrompt?: boolean }]
   const [chatMessages, setChatMessages] = useState([]);
 
-  const agentMap = { Planner: 0, Researcher: 1, Executor: 2, Reviewer: 3 };
+  const agentMap = { Planner: 0, Researcher: 1, Executor: 2, Reviewer: 3, Finalizer: 4 };
 
   // ── Output Extraction ────────────────────────────────────────────────────────
 
@@ -36,12 +36,18 @@ const Dashboard = () => {
 
   const extractBestOutput = (extraLogs = []) => {
     const allLogs = [...allLogsRef.current, ...extraLogs];
-    const executorMsgs = allLogs.filter((l) => typeof l.agent === 'string' && l.agent.toLowerCase() === 'executor');
 
-    // Attempt to grab the latest Executor output
+    // First, prioritize the Finalizer output
+    const finalizerMsgs = allLogs.filter((l) => typeof l.agent === 'string' && l.agent.toLowerCase() === 'finalizer');
+    if (finalizerMsgs.length > 0) {
+      let text = extractText(finalizerMsgs[finalizerMsgs.length - 1].content);
+      return text.replace(/COMPLETE_WORKFLOW/g, '').trim();
+    }
+
+    // Fallback: search for Executor output for older workflows
+    const executorMsgs = allLogs.filter((l) => typeof l.agent === 'string' && l.agent.toLowerCase() === 'executor');
     if (executorMsgs.length > 0) {
       let text = extractText(executorMsgs[executorMsgs.length - 1].content);
-      // Clean up any stray meta-commentary just in case
       return text.replace(/STATUS:\s*PENDING_APPROVAL/gi, '').replace(/COMPLETE_WORKFLOW/g, '').trim();
     }
 
@@ -88,7 +94,7 @@ const Dashboard = () => {
 
       if (status === 'PAUSED_FOR_HITL') {
         eventSource.close();
-        setActiveStep(4);
+        setActiveStep(5);
         const output = extractBestOutput(newLogs) || 'The Reviewer has finished processing your request. Please review the results above.';
         setChatMessages(prev => [...prev, { role: 'system', content: output, isHitlPrompt: true }]);
         return;
@@ -96,7 +102,7 @@ const Dashboard = () => {
 
       if (status === 'COMPLETED') {
         eventSource.close();
-        setActiveStep(4);
+        setActiveStep(5);
         const output = extractBestOutput(newLogs);
 
         const messagesToAdd = [{ role: 'system', content: '✨ Workflow completed successfully.', isHitlPrompt: false }];
@@ -136,7 +142,7 @@ const Dashboard = () => {
       setWorkflowStatus('ACTIVE'); // locks input
 
       try {
-        await approveWorkflow(currentSessionId, isApproval, isApproval ? '' : text);
+        await approveWorkflow(currentSessionId, isApproval, text);
         // Restart stream for both approval and rejection to get the team's final output or feedback loop
         setActiveStep(0);
         openStream(currentSessionId);
@@ -155,7 +161,11 @@ const Dashboard = () => {
     setWorkflowStatus('ACTIVE');
 
     try {
-      const data = await startWorkflow(inputText.trim());
+      // Fetch active MCPs so they can be injected into the backend pipeline
+      const mcpConfigs = await getMcpConfigs();
+      const activeMcpIds = mcpConfigs.filter(c => c.is_active).map(c => c.id);
+
+      const data = await startWorkflow(inputText.trim(), activeMcpIds);
       setCurrentSessionId(data.session_id);
       openStream(data.session_id);
     } catch (error) {

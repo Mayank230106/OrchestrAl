@@ -7,13 +7,16 @@ import json
 # --- 1. Free Web Search Tool (For Researcher) ---
 class SearchParams(BaseModel):
     query: str = Field(..., description="The search query to look up on the internet.")
-    max_results: int = Field(default=3, description="Number of results to return.")
+    max_results: int = Field(default=5, description="Number of results to return.") # Increased default to 5
 
 async def web_search(params: SearchParams) -> str:
     """Performs a live web search using DuckDuckGo."""
     try:
-        results = DDGS().text(params.query, max_results=params.max_results)
-        return json.dumps(list(results))
+        results = []
+        with DDGS() as ddgs:
+            for r in ddgs.text(params.query, max_results=params.max_results):
+                results.append(r)
+        return json.dumps(results)
     except Exception as e:
         return f"Search failed: {str(e)}"
 

@@ -8,7 +8,9 @@ class Settings(BaseSettings):
     GROQ_MODEL_1: str = "openai/gpt-oss-20b"
     GROQ_API_KEY_2: str
     GROQ_MODEL_2: str = "llama-3.3-70b-versatile"
+    FINALIZER_MODEL: str = "qwen/qwen3-32b"         
     GROQ_BASE_URL: str = "https://api.groq.com/openai/v1"
+    SERPER_API_KEY: str = ""                        
     
     # Azure Phi-4 LLM (optional - not required for core workflow)
     PHI4_API_KEY: Optional[str] = None

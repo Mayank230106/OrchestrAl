@@ -5,6 +5,8 @@ from typing import List, Dict, Any, Optional
 class TaskRequest(BaseModel):
     prompt: str = Field(..., description="The user's high-level objective")
     session_id: Optional[str] = None
+    enabled_mcps: Optional[List[str]] = None
+    hitl_enabled: bool = Field(default=True, description="Whether to require human-in-the-loop approval")
 
 class WorkflowState(BaseModel):
     session_id: str
@@ -15,13 +17,19 @@ class WorkflowState(BaseModel):
     chat_history: List[Dict[str, Any]] = []
     created_at: str
     updated_at: str
+    enabled_mcps: List[str] = []
+    hitl_enabled: bool = True
 
 class ApprovalRequest(BaseModel):
     session_id: str
     approved: bool
     feedback: Optional[str] = None
 
-# Add this to schemas.py
+class ChatRequest(BaseModel):
+    session_id: str
+    message: str
+
+# Your custom profile model (kept intact)
 class UserProfile(BaseModel):
     user_id: str = "default_user" # Hardcoded for MVP, link to Entra ID later
     full_name: str

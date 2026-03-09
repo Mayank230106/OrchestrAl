@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Zap, Brain, Search, Play, ShieldCheck, ArrowRight, Loader2, CheckCircle2 } from 'lucide-react';
+import { Zap, Brain, Search, Play, ShieldCheck, ArrowRight, Loader2, CheckCircle2, Sparkles } from 'lucide-react';
 
 const AgentNode = ({ name, icon: Icon, status, description, delay = 0 }) => {
   const getStatusColor = () => {
@@ -18,9 +18,8 @@ const AgentNode = ({ name, icon: Icon, status, description, delay = 0 }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay }}
-      className={`relative flex flex-col items-center justify-center p-6 rounded-2xl border-2 flex-1 h-full transition-all duration-500 ${getStatusColor()} ${
-        status === 'thinking' || status === 'working' ? 'shadow-lg scale-105' : 'shadow-sm'
-      }`}
+      className={`relative flex flex-col items-center justify-center p-6 rounded-2xl border-2 flex-1 h-full transition-all duration-500 ${getStatusColor()} ${status === 'thinking' || status === 'working' ? 'shadow-lg scale-105' : 'shadow-sm'
+        }`}
     >
       <div className={`p-3 rounded-xl mb-4 ${status === 'idle' ? 'bg-slate-100' : 'bg-white'}`}>
         {status === 'thinking' || status === 'working' ? (
@@ -33,9 +32,9 @@ const AgentNode = ({ name, icon: Icon, status, description, delay = 0 }) => {
       </div>
       <h3 className="font-bold text-lg mb-1 text-center">{name}</h3>
       <p className="text-sm text-center opacity-70 leading-tight">{description}</p>
-      
+
       {status === 'thinking' && (
-        <motion.div 
+        <motion.div
           layoutId="active-glow"
           className="absolute -inset-1 rounded-2xl bg-blue-400/20 blur-md -z-10"
         />
@@ -50,6 +49,7 @@ const Active = ({ activeStep = -1 }) => {
     { id: 'researcher', name: 'The Researcher', icon: Search, description: 'Gathering context and data' },
     { id: 'executor', name: 'The Executor', icon: Play, description: 'Performing API actions' },
     { id: 'reviewer', name: 'The Reviewer', icon: ShieldCheck, description: 'Validating final output' },
+    { id: 'finalizer', name: 'The Finalizer', icon: Sparkles, description: 'Formatting final response' },
   ];
 
   const getStatus = (index) => {
@@ -77,15 +77,15 @@ const Active = ({ activeStep = -1 }) => {
 
         {agents.map((agent, index) => (
           <React.Fragment key={agent.id}>
-            <AgentNode 
-              {...agent} 
-              status={getStatus(index)} 
+            <AgentNode
+              {...agent}
+              status={getStatus(index)}
               delay={index * 0.1}
             />
             {index < agents.length - 1 && (
               <div className="flex-shrink-0 flex justify-center px-2">
                 <motion.div
-                  animate={{ 
+                  animate={{
                     opacity: activeStep > index ? 1 : 0.3,
                     scale: activeStep === index ? [1, 1.2, 1] : 1
                   }}

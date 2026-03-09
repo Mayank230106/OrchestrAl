@@ -1,13 +1,14 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { 
-  Zap, 
-  LayoutDashboard, 
-  TerminalSquare, 
-  History, 
-  Users, 
-  User, 
-  LogOut 
+import {
+  Zap,
+  LayoutDashboard,
+  TerminalSquare,
+  History,
+  Users,
+  User,
+  LogOut,
+  Blocks
 } from 'lucide-react';
 
 const Sidebar = () => {
@@ -19,6 +20,7 @@ const Sidebar = () => {
     { name: 'Orchestration', icon: LayoutDashboard, path: '/' }, // Assuming Dashboard is your home
     { name: 'Agent Logs', icon: TerminalSquare, path: '/logs' },
     { name: 'Task History', icon: History, path: '/history' },
+    { name: 'Integrations', icon: Blocks, path: '/integrations' },
     { name: 'Team', icon: Users, path: '/team' },
     { name: 'My Profile', icon: User, path: '/profile' },
   ];
@@ -43,11 +45,10 @@ const Sidebar = () => {
             <Link
               key={item.name}
               to={item.path}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
-                isActive
-                  ? 'bg-black text-white shadow-md'
-                  : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
-              }`}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${isActive
+                ? 'bg-black text-white shadow-md'
+                : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
+                }`}
             >
               <item.icon size={20} className={isActive ? 'text-white' : 'text-gray-400'} />
               <span className="font-medium text-sm">{item.name}</span>
@@ -67,7 +68,7 @@ const Sidebar = () => {
             <span className="text-xs text-gray-500 truncate">Project Manager</span>
           </div>
         </div>
-        
+
         <button className="flex items-center gap-3 text-gray-500 hover:text-gray-900 transition-colors w-full px-2">
           <LogOut size={20} className="text-gray-400" />
           <span className="font-medium text-sm">Logout</span>

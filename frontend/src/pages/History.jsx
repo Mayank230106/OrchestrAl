@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
-import { getHistory, getWorkflowDetail } from '../lib/api';
+import { getHistory, getWorkflowDetail, deleteWorkflow } from '../lib/api';
 import {
   Search, CheckCircle2, XCircle, Clock, Calendar, ChevronRight,
   Activity, Loader2, Inbox, AlertCircle, X, Bot, Terminal,
-  Sparkles, ChevronLeft,
+  Sparkles, ChevronLeft, Trash2
 } from 'lucide-react';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -213,6 +213,7 @@ const History = () => {
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
   const [selectedTask, setSelectedTask] = useState(null);   // { sessionId, task }
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
 
   useEffect(() => {
     getHistory()
@@ -229,6 +230,23 @@ const History = () => {
   }, []);
 
   const closeDetail = useCallback(() => setSelectedTask(null), []);
+
+  const handleDeleteClick = (e, sessionId) => {
+    e.stopPropagation(); // Prevent row click
+    setDeleteConfirmId(sessionId);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirmId) return;
+    try {
+      await deleteWorkflow(deleteConfirmId);
+      setTasks(prev => prev.filter(t => t.session_id !== deleteConfirmId));
+      setDeleteConfirmId(null);
+    } catch (err) {
+      alert("Failed to delete session: " + err.message);
+      setDeleteConfirmId(null);
+    }
+  };
 
   return (
     <div className="flex h-screen bg-[#f8fafc] font-sans">
@@ -339,7 +357,14 @@ const History = () => {
                             </div>
                           </td>
 
-                          <td className="px-6 py-5 text-right">
+                          <td className="px-6 py-5 text-right flex items-center justify-end gap-3">
+                            <button
+                              onClick={(e) => handleDeleteClick(e, task.session_id)}
+                              className="text-gray-300 hover:text-red-500 transition-colors p-1"
+                              title="Delete Session"
+                            >
+                              <Trash2 size={18} />
+                            </button>
                             <ChevronRight size={20} className={`transition-colors ${isSelected ? 'text-indigo-500' : 'text-gray-300 group-hover:text-black'}`} />
                           </td>
                         </tr>
@@ -360,6 +385,36 @@ const History = () => {
           task={selectedTask.task}
           onClose={closeDetail}
         />
+      )}
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmId && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4" style={{ animation: 'fadeIn 0.2s ease both' }}>
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 transform transition-all" style={{ animation: 'slideInRight 0.3s cubic-bezier(0.16,1,0.3,1) both' }}>
+            <div className="flex items-center gap-4 mb-4 text-red-600">
+              <div className="bg-red-50 p-3 rounded-full">
+                <AlertCircle size={28} />
+              </div>
+              <h3 className="text-xl font-bold text-slate-900">Delete Task</h3>
+            </div>
+            <p className="text-slate-500 mb-6">
+              Are you sure you want to delete this task session? All of the agent logs and generated content will be permanently lost. This action cannot be undone.
+            </p>
+            <div className="flex items-center justify-end gap-3">
+              <button
+                onClick={() => setDeleteConfirmId(null)}
+                className="px-5 py-2.5 rounded-xl font-medium text-slate-600 hover:bg-slate-100 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-5 py-2.5 rounded-xl font-medium bg-red-600 hover:bg-red-700 text-white transition-colors shadow-sm"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -7,6 +7,7 @@ const AGENT_COLORS = {
   Researcher: 'text-purple-400',
   Executor: 'text-amber-400',
   Reviewer: 'text-emerald-400',
+  Finalizer: 'text-indigo-400',
   System: 'text-gray-400',
 };
 
@@ -15,6 +16,7 @@ const TASK_DEFINITIONS = [
   { id: 1, title: 'Gather context & research', assigned: 'Researcher', activeAt: 1 },
   { id: 2, title: 'Execute and generate output', assigned: 'Executor', activeAt: 2 },
   { id: 3, title: 'Validate & quality-check', assigned: 'Reviewer', activeAt: 3 },
+  { id: 4, title: 'Format & summarize', assigned: 'Finalizer', activeAt: 4 },
 ];
 
 const CommandLine = ({ activeStep = -1, logs = [] }) => {
@@ -87,7 +89,7 @@ const CommandLine = ({ activeStep = -1, logs = [] }) => {
               ))}
 
               {/* Blinking cursor while still processing */}
-              {activeStep >= 0 && activeStep <= 3 && (
+              {activeStep >= 0 && activeStep <= 4 && (
                 <div className="flex items-center gap-2 text-slate-500 pt-2 animate-pulse">
                   <div className="w-2 h-4 bg-slate-500" />
                 </div>

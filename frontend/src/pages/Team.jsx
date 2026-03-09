@@ -2,20 +2,21 @@ import React from 'react';
 import { motion } from 'framer-motion'; // Updated import to standard framer-motion
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
-import { 
-  Brain, 
-  Search, 
-  Play, 
-  ShieldCheck, 
-  UserCheck, 
+import {
+  Brain,
+  Search,
+  Play,
+  ShieldCheck,
+  UserCheck,
   Zap,
   Info,
-  MessageSquare
+  MessageSquare,
+  Sparkles
 } from 'lucide-react';
 
 // Removed TypeScript typings for pure JSX compatibility
 const AgentProfile = ({ name, role, icon: Icon, color, description, tasks }) => (
-  <motion.div 
+  <motion.div
     whileHover={{ y: -5 }}
     className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm hover:shadow-md transition-all flex flex-col h-full"
   >
@@ -70,6 +71,14 @@ const Team = () => {
       color: 'bg-emerald-500',
       description: 'The safety net. It sanity checks every output against the original goal to prevent hallucinations and ensure the highest quality before human review.',
       tasks: ['Sanity Checking', 'Format Validation', 'Hallucination Detection']
+    },
+    {
+      name: 'The Finalizer',
+      role: 'Communications Expert',
+      icon: Sparkles,
+      color: 'bg-indigo-500',
+      description: 'The presenter. It transforms raw technical outputs and structured data into beautifully formatted, human-readable markdown formats.',
+      tasks: ['Data Storytelling', 'Markdown Formatting', 'Table Generation']
     }
   ];
 
@@ -82,7 +91,7 @@ const Team = () => {
 
         <main className="flex-1 overflow-y-auto p-6 md:p-8">
           <div className="max-w-6xl mx-auto space-y-16 py-8">
-            
+
             {/* Header Section */}
             {/* <section className="text-center space-y-4">
               <motion.div
@@ -103,7 +112,7 @@ const Team = () => {
             </section> */}
 
             {/* Agent Grid */}
-            <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
               {agents.map((agent, i) => (
                 <AgentProfile key={i} {...agent} />
               ))}
@@ -116,7 +125,7 @@ const Team = () => {
                   <div>
                     <h2 className="text-3xl font-bold text-slate-900 mb-4">The Collaboration Loop</h2>
                     <p className="text-slate-600 leading-relaxed">
-                      Our agents don't work in isolation. They communicate through a structured message bus, 
+                      Our agents don't work in isolation. They communicate through a structured message bus,
                       passing context and feedback until the task is perfected.
                     </p>
                   </div>
@@ -126,7 +135,8 @@ const Team = () => {
                       { step: '01', title: 'Planning', desc: 'The Planner breaks down the goal.' },
                       { step: '02', title: 'Contextualizing', desc: 'The Researcher feeds the plan with data.' },
                       { step: '03', title: 'Execution', desc: 'The Executor performs the actions.' },
-                      { step: '04', title: 'Validation', desc: 'The Reviewer checks for errors.' }
+                      { step: '04', title: 'Validation', desc: 'The Reviewer checks for errors.' },
+                      { step: '05', title: 'Formatting', desc: 'The Finalizer polishes the output.' }
                     ].map((item, i) => (
                       <div key={i} className="flex items-start gap-4">
                         <span className="text-2xl font-black text-slate-200 font-mono">{item.step}</span>
@@ -140,32 +150,32 @@ const Team = () => {
                 </div>
 
                 <div className="relative h-[400px] bg-slate-50 rounded-3xl border border-slate-100 flex items-center justify-center overflow-hidden hidden lg:flex">
-                   {/* Visual representation of the loop */}
-                   <div className="absolute inset-0 opacity-10">
-                      <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-slate-900 via-transparent to-transparent" />
-                   </div>
-                   
-                   <div className="relative w-64 h-64 border-2 border-dashed border-slate-200 rounded-full flex items-center justify-center animate-[spin_20s_linear_infinite]">
-                      <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 bg-blue-500 rounded-lg shadow-lg flex items-center justify-center text-white">
-                        <Brain size={16} />
-                      </div>
-                      <div className="absolute top-1/2 -right-4 -translate-y-1/2 w-8 h-8 bg-purple-500 rounded-lg shadow-lg flex items-center justify-center text-white">
-                        <Search size={16} />
-                      </div>
-                      <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-8 h-8 bg-amber-500 rounded-lg shadow-lg flex items-center justify-center text-white">
-                        <Play size={16} />
-                      </div>
-                      <div className="absolute top-1/2 -left-4 -translate-y-1/2 w-8 h-8 bg-emerald-500 rounded-lg shadow-lg flex items-center justify-center text-white">
-                        <ShieldCheck size={16} />
-                      </div>
-                   </div>
-                   
-                   <div className="absolute flex flex-col items-center gap-2">
-                      <div className="w-16 h-16 bg-white rounded-2xl shadow-xl flex items-center justify-center border border-slate-100">
-                        <MessageSquare className="text-slate-900" size={24} />
-                      </div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Message Bus</span>
-                   </div>
+                  {/* Visual representation of the loop */}
+                  <div className="absolute inset-0 opacity-10">
+                    <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-slate-900 via-transparent to-transparent" />
+                  </div>
+
+                  <div className="relative w-64 h-64 border-2 border-dashed border-slate-200 rounded-full flex items-center justify-center animate-[spin_20s_linear_infinite]">
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 bg-blue-500 rounded-lg shadow-lg flex items-center justify-center text-white">
+                      <Brain size={16} />
+                    </div>
+                    <div className="absolute top-1/2 -right-4 -translate-y-1/2 w-8 h-8 bg-purple-500 rounded-lg shadow-lg flex items-center justify-center text-white">
+                      <Search size={16} />
+                    </div>
+                    <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-8 h-8 bg-amber-500 rounded-lg shadow-lg flex items-center justify-center text-white">
+                      <Play size={16} />
+                    </div>
+                    <div className="absolute top-1/2 -left-4 -translate-y-1/2 w-8 h-8 bg-emerald-500 rounded-lg shadow-lg flex items-center justify-center text-white">
+                      <ShieldCheck size={16} />
+                    </div>
+                  </div>
+
+                  <div className="absolute flex flex-col items-center gap-2">
+                    <div className="w-16 h-16 bg-white rounded-2xl shadow-xl flex items-center justify-center border border-slate-100">
+                      <MessageSquare className="text-slate-900" size={24} />
+                    </div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Message Bus</span>
+                  </div>
                 </div>
               </div>
             </section>
@@ -180,7 +190,7 @@ const Team = () => {
                   </div>
                   <h2 className="text-4xl font-bold tracking-tight">You are the Final Authority.</h2>
                   <p className="text-slate-400 text-lg leading-relaxed max-w-xl">
-                    Automation shouldn't mean losing control. OrchestrAl includes mandatory validation checkpoints 
+                    Automation shouldn't mean losing control. OrchestrAl includes mandatory validation checkpoints
                     where a human must provide a "thumbs up" before critical actions are finalized.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-4 pt-4">
@@ -194,7 +204,7 @@ const Team = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Decorative background element */}
                 <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-emerald-500/10 blur-[100px] rounded-full" />
               </div>
@@ -206,7 +216,7 @@ const Team = () => {
                   </div>
                   <h3 className="text-xl font-bold text-slate-900">Why HITL?</h3>
                   <p className="text-sm text-slate-600 leading-relaxed">
-                    By combining AI speed with human judgment, we eliminate the risk of autonomous errors while 
+                    By combining AI speed with human judgment, we eliminate the risk of autonomous errors while
                     retaining 90% of the efficiency gains.
                   </p>
                 </div>
