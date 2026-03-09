@@ -6,7 +6,7 @@ from autogen_ext.models.openai import OpenAIChatCompletionClient
 from backend.config import settings
 from backend.tools import duckduckgo_tool, calendar_tool
 
-def build_orchestrai_team():
+def build_orchestrai_team(is_approved: bool = False):
     # model_info is required for non-OpenAI model names
     from autogen_core.models import ModelInfo
     
@@ -60,10 +60,15 @@ def build_orchestrai_team():
     )
 
     # -- Terminations --
-    # Stop if the Reviewer calls for HITL, or as a fallback stop after 5 messages to save tokens.
-    hitl_termination = TextMentionTermination("STATUS: PENDING_APPROVAL")
-    fallback_termination = MaxMessageTermination(max_messages=5)
-    termination_condition = hitl_termination | fallback_termination
+    # Stop if the Reviewer calls for HITL, or as a fallback stop after 30 messages to save tokens.
+    fallback_termination = MaxMessageTermination(max_messages=30)
+    
+    if is_approved:
+        success_termination = TextMentionTermination("COMPLETE_WORKFLOW")
+        termination_condition = success_termination | fallback_termination
+    else:
+        hitl_termination = TextMentionTermination("STATUS: PENDING_APPROVAL")
+        termination_condition = hitl_termination | fallback_termination
 
     # -- Create Team --
     team = RoundRobinGroupChat(

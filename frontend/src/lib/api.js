@@ -34,7 +34,13 @@ export async function getHistory() {
   const res = await fetch(`${BASE_URL}/history`);
   if (!res.ok) throw new Error(`Failed to fetch history: ${res.statusText}`);
   const data = await res.json();
-  return data.tasks || []; // array of workflow summaries
+  return data.tasks || [];
+}
+
+export async function getWorkflowDetail(sessionId) {
+  const res = await fetch(`${BASE_URL}/workflow/${sessionId}`);
+  if (!res.ok) throw new Error(`Failed to fetch workflow: ${res.statusText}`);
+  return res.json(); // full state including chat_history
 }
 
 // ─── Logs ─────────────────────────────────────────────────────────────────────

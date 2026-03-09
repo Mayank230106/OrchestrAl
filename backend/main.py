@@ -38,7 +38,7 @@ async def run_workflow(session_id: str, prompt: str, resume_feedback: str = None
     if not db_state:
         return
 
-    team = build_orchestrai_team()
+    team = build_orchestrai_team(is_approved=db_state.get("is_approved", False))
 
     # Restore saved AutoGen state when resuming after HITL
     if db_state.get("autogen_state"):
@@ -71,8 +71,16 @@ async def run_workflow(session_id: str, prompt: str, resume_feedback: str = None
                 await db_service.save_state(db_state)
 
         # Determine final status
+        # Only check NEW messages in this run for PENDING_APPROVAL so we don't infinitely pause
+        # due to historical messages.
+        is_approved = db_state.get("is_approved", False)
+        
+        # We need to find if there was a NEW pending approval request.
+        # However, to be safe, we can just check if we are NOT approved, and the LAST reviewer message asks for approval.
         reviewer_msgs = [m["content"] for m in db_state["chat_history"] if m["agent"] == "Reviewer"]
-        if reviewer_msgs and "STATUS: PENDING_APPROVAL" in str(reviewer_msgs[-1]):
+        pending_request = reviewer_msgs and "STATUS: PENDING_APPROVAL" in str(reviewer_msgs[-1])
+
+        if pending_request and not is_approved:
             db_state["status"] = "PAUSED_FOR_HITL"
         else:
             db_state["status"] = "COMPLETED"
@@ -103,6 +111,7 @@ async def start_workflow(request: TaskRequest, background_tasks: BackgroundTasks
     initial_state = WorkflowState(
         session_id=session_id,
         status="ACTIVE",
+        is_approved=False,
         original_prompt=request.prompt,
         created_at=datetime.datetime.utcnow().isoformat(),
         updated_at=datetime.datetime.utcnow().isoformat(),
@@ -116,10 +125,10 @@ async def start_workflow(request: TaskRequest, background_tasks: BackgroundTasks
 
 
 @app.get("/api/workflow/{session_id}/stream")
-async def stream_workflow_status(session_id: str, request: Request):
+async def stream_workflow_status(session_id: str, request: Request, start: int = 0):
     """Server-Sent Events stream — polls Cosmos DB for new agent messages."""
     async def event_generator():
-        last_message_count = 0
+        last_message_count = start
 
         while True:
             if await request.is_disconnected():
@@ -153,14 +162,29 @@ async def get_history():
     return {"tasks": workflows}
 
 
+@app.get("/api/workflow/{session_id}")
+async def get_workflow_detail(session_id: str):
+    state = await db_service.get_state(session_id)
+    if not state:
+        raise HTTPException(status_code=404, detail="Session not found")
+    return state
+
+
 @app.post("/api/workflow/approve")
 async def approve_workflow(request: ApprovalRequest, background_tasks: BackgroundTasks):
     state = await db_service.get_state(request.session_id)
     if not state or state["status"] != "PAUSED_FOR_HITL":
         raise HTTPException(status_code=400, detail="Workflow not awaiting approval")
 
-    feedback = request.feedback if not request.approved else "Human Approved. Execute final."
-    state["status"] = "ACTIVE"
+    if request.approved:
+        state["is_approved"] = True
+        state["status"] = "ACTIVE"
+        feedback = "Human Approved. Planners/Researchers/Executors: do nothing, pass to Reviewer. Reviewer: YOU MUST NOT output 'STATUS: PENDING_APPROVAL' anymore. Output the final, well-structured, comprehensive markdown summary of the execution for the user. End your message with exactly the single word COMPLETE_WORKFLOW"
+    else:
+        state["is_approved"] = False
+        state["status"] = "ACTIVE"
+        feedback = request.feedback
+
     await db_service.save_state(state)
 
     # Resume the workflow in the background

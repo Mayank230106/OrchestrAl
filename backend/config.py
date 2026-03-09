@@ -25,6 +25,10 @@ class Settings(BaseSettings):
     SERVICE_BUS_CONNECTION_STRING: str
     SERVICE_BUS_QUEUE_NAME: str = "agent-tasks"
 
+    # Spotify MCP
+    SPOTIFY_CLIENT_ID: str = ""
+    SPOTIFY_CLIENT_SECRET: str = ""
+
     class Config:
         env_file = ".env"
         extra = "ignore"

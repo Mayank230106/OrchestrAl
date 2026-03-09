@@ -9,6 +9,7 @@ class TaskRequest(BaseModel):
 class WorkflowState(BaseModel):
     session_id: str
     status: str = Field(default="PENDING", description="PENDING, ACTIVE, PAUSED_FOR_HITL, COMPLETED, FAILED")
+    is_approved: bool = Field(default=False, description="Whether the human has approved the payload to run to completion")
     original_prompt: str
     autogen_state: Optional[Dict[str, Any]] = Field(default=None, description="Serialized AutoGen team state")
     chat_history: List[Dict[str, Any]] = []
