@@ -4,8 +4,8 @@ from autogen_agentchat.teams import SelectorGroupChat
 from autogen_agentchat.conditions import TextMentionTermination, MaxMessageTermination
 from autogen_ext.models.openai import OpenAIChatCompletionClient
 from backend.config import settings
-# Added new calendar and time tools from friend's code
-from backend.tools import duckduckgo_tool, calendar_tool, global_calendar_tool, current_time_tool
+# Added new calendar, time, and email tools from friend's code
+from backend.tools import duckduckgo_tool, calendar_tool, global_calendar_tool, current_time_tool, email_tool
 import datetime
 
 def build_orchestrai_team(is_approved: bool = False, extra_tools: list = None, hitl_enabled: bool = True):
@@ -62,8 +62,8 @@ def build_orchestrai_team(is_approved: bool = False, extra_tools: list = None, h
     executor = AssistantAgent(
         name="Executor",
         model_client=executor_client,
-        # Merged new global calendar and time tools
-        tools=[calendar_tool, global_calendar_tool, current_time_tool] + extra_tools,
+        # Merged new global calendar, time, and email tools
+        tools=[calendar_tool, global_calendar_tool, current_time_tool, email_tool] + extra_tools,
         description="Executes APIs. Route here when the Planner asks for an action to be performed.",
         system_message=f"""You are the Executor. Today is {current_date}.
         You execute APIs based on the Planner's instructions and Researcher's data.

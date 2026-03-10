@@ -31,6 +31,11 @@ class Settings(BaseSettings):
     SPOTIFY_CLIENT_ID: str = ""
     SPOTIFY_CLIENT_SECRET: str = ""
 
+    # Brevo Email
+    BREVO_API_KEY: str = ""
+    BREVO_SENDER_EMAIL: str = "mayank230106raj@gmail.com" # Don't forget to change this!
+    BREVO_SENDER_NAME: str = "OrchestrAI Agent"
+
     class Config:
         env_file = ".env"
         extra = "ignore"
