@@ -104,3 +104,13 @@ export async function deleteMcpConfig(mcpId) {
   if (!res.ok) throw new Error(`Failed to delete MCP config: ${res.statusText}`);
   return res.json();
 }
+
+// ─── Calendar ─────────────────────────────────────────────────────────────────
+
+/** Global Calendar Data Retrieval */
+export async function getCalendarEvents() {
+    const res = await fetch(`${BASE_URL}/calendar`);
+    if (!res.ok) throw new Error('Failed to fetch calendar events');
+    const data = await res.json();
+    return data.events || [];
+}

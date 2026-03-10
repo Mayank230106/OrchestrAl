@@ -15,6 +15,7 @@ class CosmosDBService:
         self.container = None
         self.vector_container = None
         self.mcp_container = None
+        self.calendar_container = None  # Added for Calendar Events
 
     async def init_db(self):
         print(f"DEBUG: Initializing Cosmos DB connection to {settings.COSMOS_DB_ENDPOINT}")
@@ -70,6 +71,13 @@ class CosmosDBService:
             partition_key=PartitionKey(path="/id")
         )
         print("DEBUG: Container 'mcp_configs' ready.")
+
+        # 4. Global Calendar Events Container (Added from friend's code)
+        self.calendar_container = await self.db.create_container_if_not_exists(
+            id="calendar_events",
+            partition_key=PartitionKey(path="/type")
+        )
+        print("DEBUG: Container 'calendar_events' ready.")
 
     # --- CORE WORKFLOW STATE METHODS ---
     async def save_state(self, state_dict: dict):
@@ -177,6 +185,25 @@ class CosmosDBService:
             await self.mcp_container.delete_item(item=mcp_id, partition_key=mcp_id)
         except Exception:
             pass
+
+    # --- CALENDAR METHODS (Added from friend's code) ---
+    async def save_calendar_event(self, event: dict):
+        if "created_at" not in event:
+            event["created_at"] = datetime.datetime.utcnow().isoformat()
+        if "type" not in event:
+            event["type"] = "MEETING" # Default partition key
+        await self.calendar_container.upsert_item(body=event)
+
+    async def get_calendar_events(self) -> list:
+        query = "SELECT * FROM c ORDER BY c.start_time ASC"
+        events = []
+        try:
+            async for item in self.calendar_container.query_items(query=query):
+                events.append(item)
+            return events
+        except Exception as e:
+            print(f"Error fetching calendar: {str(e)}")
+            return []
 
     # --- VECTOR EMBEDDING / RAG METHODS ---
     async def save_chunk(self, session_id: str, chunk_id: str, text: str, embedding: list, metadata: dict = None):

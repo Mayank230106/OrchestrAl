@@ -309,6 +309,14 @@ async def delete_mcp_config(mcp_id: str):
     return {"status": "success"}
 
 
+# ── EXACT: New Global Calendar Endpoint ───────────────────────────────────────
+
+@app.get("/api/calendar")
+async def get_calendar_events():
+    events = await db_service.get_calendar_events()
+    return {"events": events}
+
+
 # ── Existing History, Profile, and Logs Endpoints (Your Code) ─────────────────
 
 @app.get("/api/history")

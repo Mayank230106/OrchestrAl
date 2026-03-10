@@ -9,6 +9,7 @@ import Profile from './pages/Profile';
 import Sidebar from './components/Sidebar';
 import Team from './pages/Team';
 import Integrations from './pages/Integrations';
+import Calendar from './pages/Calendar';
 
 const App = () => {
   return (
@@ -21,6 +22,7 @@ const App = () => {
         <Route path="/profile" element={<Profile />} />
         <Route path="/team" element={<Team />} />
         <Route path="/integrations" element={<Integrations />} />
+        <Route path="/calendar" element={<Calendar />} />
       </Routes>
     </div>
   )

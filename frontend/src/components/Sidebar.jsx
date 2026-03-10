@@ -8,7 +8,8 @@ import {
   Users,
   User,
   LogOut,
-  Blocks
+  Blocks,
+  CalendarDays
 } from 'lucide-react';
 
 const Sidebar = () => {
@@ -20,6 +21,7 @@ const Sidebar = () => {
     { name: 'Orchestration', icon: LayoutDashboard, path: '/' }, // Assuming Dashboard is your home
     { name: 'Agent Logs', icon: TerminalSquare, path: '/logs' },
     { name: 'Task History', icon: History, path: '/history' },
+    { name: 'Global Calendar', icon: CalendarDays, path: '/calendar' },
     { name: 'Integrations', icon: Blocks, path: '/integrations' },
     { name: 'Team', icon: Users, path: '/team' },
     { name: 'My Profile', icon: User, path: '/profile' },
