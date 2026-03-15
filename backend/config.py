@@ -18,6 +18,11 @@ class Settings(BaseSettings):
     PHI4_TARGET_URI: Optional[str] = None
     PHI4_MODEL: str = "phi-4"
     
+    # JWT Auth
+    JWT_SECRET_KEY: str = "change-me-in-production"
+    JWT_ALGORITHM: str = "HS256"
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 hours
+
     # Azure Infrastructure
     COSMOS_DB_ENDPOINT: str
     COSMOS_DB_KEY: str

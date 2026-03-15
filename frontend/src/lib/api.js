@@ -114,3 +114,46 @@ export async function getCalendarEvents() {
     const data = await res.json();
     return data.events || [];
 }
+
+
+// ─── Auth ─────────────────────────────────────────────────────────────────────
+// These hit /auth/* directly (not /api/*) — update vite.config.js proxy if needed
+
+/** Register a new account. Throws with the server's error message on failure. */
+export async function signup(name, email, password) {
+    const res = await fetch('/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password }),
+    });
+    if (!res.ok) {
+        // FastAPI puts the error in detail; surface that directly to the UI
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || 'Signup failed. Please try again.');
+    }
+    return res.json(); // { message: "Account created successfully." }
+}
+
+/** Log in and receive a JWT + user object. Throws on bad credentials. */
+export async function login(email, password) {
+    const res = await fetch('/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+    });
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || 'Invalid email or password.');
+    }
+    return res.json(); // { access_token, token_type, user: { id, name, email, created_at } }
+}
+
+/** Verify a stored token is still valid and fetch the current user object. */
+export async function getMe(token) {
+    const res = await fetch('/auth/me', {
+        headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('Token invalid or expired.');
+    return res.json(); // { id, name, email }
+}
+

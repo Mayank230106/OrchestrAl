@@ -1,241 +1,271 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Sidebar from '../components/Sidebar';
-import toast, { Toaster } from 'react-hot-toast';
-import { getProfile, updateProfile } from '../lib/api';
+import Navbar from '../components/Navbar';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-  User, Mail, GraduationCap, Github,
-  Link as LinkIcon, FileText, Wrench,
-  Camera, X, Save, Loader2,
+    ShieldCheck,Save, User, Camera, Globe, Github, Linkedin, Twitter, X, Plus, Activity, CheckCircle2, XCircle,
+    ShieldAlert, Zap, ArrowRight, Calendar as CalendarIcon, Mail
 } from 'lucide-react';
 
-const EMPTY_FORM = {
-  full_name: '',
-  email: '',
-  college_email: '',
-  github_username: '',
-  github_url: '',
-  bio: '',
-};
-
 const Profile = () => {
-  const [formData, setFormData] = useState(EMPTY_FORM);
-  const [skills, setSkills] = useState([]);
-  const [skillInput, setSkillInput] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+    // State initialized with user data
+    const [formData, setFormData] = useState({
+        fullName: 'Shashank',
+        role: 'Software Engineer',
+        bio: 'Passionate about competitive programming, scalable web development, and multi-agent cloud architectures.',
+        email: 'shashank@example.com',
+        socials: {
+            github: 'shashank2327',
+            twitter: '',
+            linkedin: '',
+            website: ''
+        }
+    });
 
-  // Load profile from backend on mount
-  useEffect(() => {
-    getProfile()
-      .then((data) => {
-        setFormData({
-          full_name: data.full_name || '',
-          email: data.email || '',
-          college_email: data.college_email || '',
-          github_username: data.github_username || '',
-          github_url: data.github_url || '',
-          bio: data.bio || '',
-        });
-        setSkills(data.skills || []);
-        setLoading(false);
-      })
-      .catch((err) => {
-        toast.error(`Failed to load profile: ${err.message}`);
-        setLoading(false);
-      });
-  }, []);
+    const [skills, setSkills] = useState(['Java', 'C++', 'JavaScript', 'AWS', 'Docker', 'React']);
+    const [skillInput, setSkillInput] = useState('');
+    const [isSaving, setIsSaving] = useState(false);
+    const [saved, setSaved] = useState(false);
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+    const handleAddSkill = (e) => {
+        if (e.key === 'Enter' && skillInput.trim() !== '') {
+            e.preventDefault();
+            if (!skills.includes(skillInput.trim())) {
+                setSkills([...skills, skillInput.trim()]);
+            }
+            setSkillInput('');
+        }
+    };
 
-  const handleAddSkill = (e) => {
-    if (e.key === 'Enter' && skillInput.trim() !== '') {
-      e.preventDefault();
-      if (!skills.includes(skillInput.trim())) {
-        setSkills([...skills, skillInput.trim()]);
-      }
-      setSkillInput('');
-    }
-  };
+    const removeSkill = (skillToRemove) => {
+        setSkills(skills.filter(skill => skill !== skillToRemove));
+    };
 
-  const removeSkill = (skillToRemove) => {
-    setSkills(skills.filter((s) => s !== skillToRemove));
-  };
+    const handleSave = () => {
+        setIsSaving(true);
+        setTimeout(() => {
+            setIsSaving(false);
+            setSaved(true);
+            setTimeout(() => setSaved(false), 3000);
+        }, 1000);
+    };
 
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      await updateProfile({ ...formData, skills, user_id: 'default_user' });
-      toast.success('Profile saved successfully!');
-    } catch (err) {
-      toast.error(`Save failed: ${err.message}`);
-    } finally {
-      setSaving(false);
-    }
-  };
+    // Animation variants for the Bento grid
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } }
+    };
 
-  if (loading) {
     return (
-      <div className="flex h-screen bg-[#f8fafc] font-sans">
-        <Sidebar />
-        <div className="flex-1 flex items-center justify-center text-gray-400 gap-3">
-          <Loader2 size={28} className="animate-spin" />
-          <span>Loading profile…</span>
-        </div>
-      </div>
-    );
-  }
+        <div className="flex h-screen bg-[#f8fafc] font-sans">
+            <Sidebar />
+            <div className="flex-1 flex flex-col h-screen overflow-hidden">
+                <Navbar />
+                
+                <main className="flex-1 overflow-y-auto p-6 md:p-8">
+                    <div className="max-w-5xl mx-auto py-4">
+                        
+                        {/* Action Header */}
+                        <div className="flex items-center justify-between mb-8">
+                            <div>
+                                <h1 className="text-3xl font-bold tracking-tight text-slate-900">My Profile</h1>
+                                <p className="text-slate-500 mt-1">Manage your identity and technical footprint.</p>
+                            </div>
+                            <button 
+                                onClick={handleSave}
+                                disabled={isSaving}
+                                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold shadow-md transition-all ${
+                                    saved ? 'bg-emerald-500 text-white' : 'bg-black text-white hover:bg-gray-800 hover:scale-105 active:scale-95'
+                                }`}
+                            >
+                                {isSaving ? (
+                                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                ) : saved ? (
+                                    <><CheckCircle2 size={18} /> Saved</>
+                                ) : (
+                                    <><Save size={18} /> Save Profile</>
+                                )}
+                            </button>
+                        </div>
 
-  return (
-    <div className="flex h-screen bg-[#f8fafc] font-sans">
-      <Toaster position="top-right" />
-      <Sidebar />
+                        {/* Bento Grid Layout */}
+                        <motion.div 
+                            initial="hidden"
+                            animate="visible"
+                            variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
+                            className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+                        >
+                            {/* Card 1: Main Identity (Spans 2 columns) */}
+                            <motion.div variants={itemVariants} className="lg:col-span-2 bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden group hover:shadow-md transition-shadow">
+                                {/* Abstract Dark Cover Photo */}
+                                <div className="h-32 bg-black relative overflow-hidden">
+                                    <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f1f1f_1px,transparent_1px),linear-gradient(to_bottom,#1f1f1f_1px,transparent_1px)] bg-[size:2rem_2rem] opacity-30" />
+                                    <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-slate-800 rounded-full blur-[80px] opacity-50" />
+                                </div>
+                                
+                                <div className="px-8 pb-8 relative">
+                                    {/* Overlapping Avatar */}
+                                    <div className="relative inline-block -mt-12 mb-4">
+                                        <div className="w-24 h-24 bg-white rounded-2xl p-1.5 shadow-lg">
+                                            <div className="w-full h-full bg-gray-100 rounded-xl border border-gray-200 flex items-center justify-center text-gray-400">
+                                                <User size={40} />
+                                            </div>
+                                        </div>
+                                        <button className="absolute -bottom-2 -right-2 bg-white border border-gray-200 text-black p-2 rounded-full shadow-sm hover:bg-gray-50 transition-colors">
+                                            <Camera size={14} />
+                                        </button>
+                                    </div>
 
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        <main className="flex-1 overflow-y-auto p-6 md:p-8">
-          <div className="w-full max-w-4xl mx-auto">
+                                    <div className="space-y-6">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Full Name</label>
+                                                <input 
+                                                    type="text" 
+                                                    value={formData.fullName}
+                                                    onChange={(e) => setFormData({...formData, fullName: e.target.value})}
+                                                    className="w-full text-lg font-bold text-slate-900 bg-transparent border-b-2 border-transparent focus:border-black focus:outline-none transition-colors pb-1"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Primary Role</label>
+                                                <input 
+                                                    type="text" 
+                                                    value={formData.role}
+                                                    onChange={(e) => setFormData({...formData, role: e.target.value})}
+                                                    className="w-full text-lg font-bold text-slate-900 bg-transparent border-b-2 border-transparent focus:border-black focus:outline-none transition-colors pb-1"
+                                                />
+                                            </div>
+                                        </div>
 
-            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Biography</label>
+                                            <textarea 
+                                                value={formData.bio}
+                                                onChange={(e) => setFormData({...formData, bio: e.target.value})}
+                                                rows="2"
+                                                className="w-full text-slate-600 bg-gray-50 border border-gray-100 rounded-xl p-4 focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all outline-none resize-none leading-relaxed"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
 
-              {/* Header Section */}
-              <div className="p-8 border-b border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-                <div className="flex items-center gap-6">
-                  <div className="relative">
-                    <div className="w-24 h-24 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-400">
-                      <User size={48} strokeWidth={1.5} />
+                            {/* Card 2: Contact & Email (Spans 1 column) */}
+                            <motion.div variants={itemVariants} className="lg:col-span-1 bg-white rounded-3xl border border-gray-200 shadow-sm p-8 hover:shadow-md transition-shadow flex flex-col">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="p-2 bg-gray-100 rounded-lg text-gray-700">
+                                        <Mail size={20} />
+                                    </div>
+                                    <h3 className="font-bold text-slate-900 text-lg">Contact</h3>
+                                </div>
+
+                                <div className="space-y-4 flex-1">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Primary Email</label>
+                                        <input 
+                                            type="email" 
+                                            value={formData.email}
+                                            readOnly
+                                            className="w-full bg-gray-50 border border-gray-100 text-gray-500 rounded-xl p-4 outline-none cursor-not-allowed font-medium"
+                                        />
+                                        <p className="text-xs text-gray-400 mt-1">Contact IT admin to change primary email.</p>
+                                    </div>
+                                </div>
+                            </motion.div>
+
+                            {/* Card 3: Social & Web Presence (Spans 1 column) */}
+                            <motion.div variants={itemVariants} className="lg:col-span-1 bg-white rounded-3xl border border-gray-200 shadow-sm p-8 hover:shadow-md transition-shadow">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="p-2 bg-gray-100 rounded-lg text-gray-700">
+                                        <Globe size={20} />
+                                    </div>
+                                    <h3 className="font-bold text-slate-900 text-lg">Web Presence</h3>
+                                </div>
+
+                                <div className="space-y-4">
+                                    {[
+                                        { id: 'github', icon: Github, placeholder: 'github.com/username' },
+                                        { id: 'linkedin', icon: Linkedin, placeholder: 'linkedin.com/in/username' },
+                                        { id: 'twitter', icon: Twitter, placeholder: 'twitter.com/username' }
+                                    ].map((social) => (
+                                        <div key={social.id} className="relative flex items-center group">
+                                            <div className="absolute left-4 text-gray-400 group-focus-within:text-black transition-colors">
+                                                <social.icon size={18} />
+                                            </div>
+                                            <input 
+                                                type="text"
+                                                placeholder={social.placeholder}
+                                                value={formData.socials[social.id]}
+                                                onChange={(e) => setFormData({
+                                                    ...formData, 
+                                                    socials: {...formData.socials, [social.id]: e.target.value}
+                                                })}
+                                                className="w-full bg-gray-50 border border-gray-100 focus:bg-white focus:border-black focus:ring-1 focus:ring-black rounded-xl py-3.5 pl-12 pr-4 transition-all outline-none text-sm font-medium text-slate-700"
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            </motion.div>
+
+                            {/* Card 4: Skills & Tech Stack (Spans 2 columns) */}
+                            <motion.div variants={itemVariants} className="lg:col-span-2 bg-white rounded-3xl border border-gray-200 shadow-sm p-8 hover:shadow-md transition-shadow flex flex-col">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="p-2 bg-black text-white rounded-lg">
+                                        <Zap size={20} className="fill-current" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-slate-900 text-lg">Technical Arsenal</h3>
+                                        <p className="text-xs text-gray-500">Skills are used by the Planner Agent to assign tasks.</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex-1 flex flex-col justify-between">
+                                    <div className="flex flex-wrap gap-2 mb-6 min-h-[80px] content-start">
+                                        <AnimatePresence mode="popLayout">
+                                            {skills.map((skill) => (
+                                                <motion.span 
+                                                    key={skill}
+                                                    initial={{ opacity: 0, scale: 0.8 }}
+                                                    animate={{ opacity: 1, scale: 1 }}
+                                                    exit={{ opacity: 0, scale: 0.8 }}
+                                                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                                                    className="flex items-center gap-1.5 bg-gray-100 text-slate-800 border border-gray-200 px-4 py-2 rounded-xl text-sm font-bold shadow-sm hover:border-gray-300 transition-colors group"
+                                                >
+                                                    {skill}
+                                                    <button 
+                                                        onClick={() => removeSkill(skill)}
+                                                        className="text-gray-400 group-hover:text-red-500 transition-colors focus:outline-none ml-1"
+                                                    >
+                                                        <X size={14} strokeWidth={3} />
+                                                    </button>
+                                                </motion.span>
+                                            ))}
+                                        </AnimatePresence>
+                                    </div>
+
+                                    <div className="relative">
+                                        <input 
+                                            type="text" 
+                                            value={skillInput}
+                                            onChange={(e) => setSkillInput(e.target.value)}
+                                            onKeyDown={handleAddSkill}
+                                            placeholder="Type a skill and press Enter to add..."
+                                            className="w-full bg-gray-50 border border-gray-200 rounded-xl py-4 pl-4 pr-12 focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all outline-none text-sm font-medium"
+                                        />
+                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
+                                            <Plus size={20} />
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+
+                        </motion.div>
                     </div>
-                    <button className="absolute bottom-0 right-0 p-2 bg-white border border-gray-200 rounded-full text-slate-700 hover:text-black hover:border-black transition-colors shadow-sm">
-                      <Camera size={16} />
-                    </button>
-                  </div>
-                  <div>
-                    <h1 className="text-2xl font-bold text-slate-900">{formData.full_name || 'Your Name'}</h1>
-                    <p className="text-gray-500 font-medium">@{formData.github_username || 'github-handle'}</p>
-                  </div>
-                </div>
-
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="flex items-center gap-2 bg-black text-white px-6 py-3 rounded-xl hover:bg-gray-800 transition-colors font-medium shadow-sm disabled:opacity-60"
-                >
-                  {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-                  {saving ? 'Saving…' : 'Save Changes'}
-                </button>
-              </div>
-
-              {/* Form */}
-              <div className="p-8 space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-                  {/* Full Name */}
-                  <div className="space-y-2">
-                    <label className="flex items-center gap-2 text-sm font-bold text-slate-700">
-                      <User size={16} className="text-gray-400" /> Full Name
-                    </label>
-                    <input
-                      type="text" name="full_name" value={formData.full_name}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors"
-                    />
-                  </div>
-
-                  {/* Email (read-only) */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <label className="flex items-center gap-2 text-sm font-bold text-slate-700">
-                        <Mail size={16} className="text-gray-400" /> Email Address
-                      </label>
-                      <span className="text-xs text-gray-400 font-medium">(Read-only)</span>
-                    </div>
-                    <input
-                      type="email" value={formData.email} readOnly
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-500 focus:outline-none cursor-not-allowed"
-                    />
-                  </div>
-
-                  {/* College Email (read-only) */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <label className="flex items-center gap-2 text-sm font-bold text-slate-700">
-                        <GraduationCap size={16} className="text-gray-400" /> College Email
-                      </label>
-                      <span className="text-xs text-gray-400 font-medium">(Read-only)</span>
-                    </div>
-                    <input
-                      type="email" value={formData.college_email} readOnly
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-500 focus:outline-none cursor-not-allowed"
-                    />
-                  </div>
-
-                  {/* GitHub Username */}
-                  <div className="space-y-2">
-                    <label className="flex items-center gap-2 text-sm font-bold text-slate-700">
-                      <Github size={16} className="text-gray-400" /> GitHub Username
-                    </label>
-                    <input
-                      type="text" name="github_username" value={formData.github_username}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors"
-                    />
-                  </div>
-                </div>
-
-                {/* GitHub URL */}
-                <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-sm font-bold text-slate-700">
-                    <LinkIcon size={16} className="text-gray-400" /> GitHub Profile URL
-                  </label>
-                  <input
-                    type="url" name="github_url" value={formData.github_url}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors"
-                  />
-                </div>
-
-                {/* Bio */}
-                <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-sm font-bold text-slate-700">
-                    <FileText size={16} className="text-gray-400" /> Bio
-                  </label>
-                  <textarea
-                    name="bio" value={formData.bio} onChange={handleChange} rows={4}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors resize-none"
-                  />
-                </div>
-
-                {/* Skills */}
-                <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-sm font-bold text-slate-700">
-                    <Wrench size={16} className="text-gray-400" /> Skills
-                  </label>
-                  <div className="w-full min-h-[52px] px-4 py-2 rounded-xl border border-gray-300 focus-within:border-black focus-within:ring-1 focus-within:ring-black transition-colors flex flex-wrap items-center gap-2 bg-white">
-                    {skills.map((skill, i) => (
-                      <span key={i} className="flex items-center gap-1 bg-gray-100 text-slate-800 border border-gray-200 px-3 py-1 rounded-lg text-sm font-medium">
-                        {skill}
-                        <button onClick={() => removeSkill(skill)} className="text-gray-400 hover:text-black transition-colors ml-1 focus:outline-none">
-                          <X size={14} />
-                        </button>
-                      </span>
-                    ))}
-                    <input
-                      type="text" value={skillInput}
-                      onChange={(e) => setSkillInput(e.target.value)}
-                      onKeyDown={handleAddSkill}
-                      placeholder="Type a skill and press Enter"
-                      className="flex-1 min-w-[200px] outline-none text-slate-700 bg-transparent py-1"
-                    />
-                  </div>
-                </div>
-              </div>
+                </main>
             </div>
-
-          </div>
-        </main>
-      </div>
-    </div>
-  );
+        </div>
+    );
 };
 
 export default Profile;

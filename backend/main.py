@@ -1,5 +1,5 @@
 # backend/main.py
-from fastapi import FastAPI, HTTPException, Request, BackgroundTasks, File, UploadFile, Form
+from fastapi import FastAPI, HTTPException, Request, BackgroundTasks, File, UploadFile, Form, Depends
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.concurrency import run_in_threadpool
@@ -9,10 +9,11 @@ import datetime
 import json
 import asyncio
 
-from backend.schemas import TaskRequest, WorkflowState, ApprovalRequest, UserProfile, ChatRequest
+from backend.schemas import TaskRequest, WorkflowState, ApprovalRequest, UserProfile, ChatRequest, SignupRequest, LoginRequest, TokenResponse
 from backend.database import db_service
 from backend.config import settings
 from backend.team import build_orchestrai_team
+from backend.auth import hash_password, verify_password, create_access_token, get_current_user
 
 from backend.rag import extract_text_from_file, chunk_text, embed_texts
 from azure.servicebus.aio import ServiceBusClient
@@ -60,6 +61,91 @@ async def startup_event():
                 },
                 "is_active": True
             })
+
+
+# ── Auth Endpoints ───────────────────────────────────────────────────────────
+
+@app.post("/auth/signup", status_code=201)
+async def signup(request: SignupRequest):
+    """
+    Register a new user. Checks for an existing account, hashes the password
+    with bcrypt, and stores the user in Cosmos DB. Returns a 409 if the email
+    is already taken.
+    """
+    existing = await db_service.get_user_by_email(request.email)
+    if existing:
+        raise HTTPException(
+            status_code=409,
+            detail="An account with that email address already exists."
+        )
+
+    new_user = {
+        # Using email as both `id` and partition key for instant point-reads
+        "id": request.email,
+        "email": request.email,
+        "name": request.name,
+        "password_hash": hash_password(request.password),  # never store plain text!
+        "created_at": datetime.datetime.utcnow().isoformat(),
+    }
+    await db_service.save_user(new_user)
+    return {"message": "Account created successfully. Please log in."}
+
+
+@app.post("/auth/login", response_model=TokenResponse)
+async def login(request: LoginRequest):
+    """
+    Authenticate a user. Verifies the password against the stored bcrypt hash
+    and returns a signed JWT on success.
+    """
+    user = await db_service.get_user_by_email(request.email)
+
+    # Intentionally vague error so we don't leak which emails are registered
+    if not user or not verify_password(request.password, user["password_hash"]):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid email or password."
+        )
+
+    token_payload = {
+        "sub": user["email"],
+        "name": user["name"],
+        "id": user["id"],
+    }
+    access_token = create_access_token(data=token_payload)
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "id": user["id"],
+            "name": user["name"],
+            "email": user["email"],
+            "created_at": user["created_at"],
+        },
+    }
+
+
+@app.post("/auth/logout")
+async def logout():
+    """
+    Stateless logout — the real work happens on the client (deleting the token
+    from localStorage). This endpoint just confirms the action server-side.
+    For immediate token revocation, a blacklist container could be added later.
+    """
+    return {"message": "Logged out successfully. Please delete your local token."}
+
+
+@app.get("/auth/me")
+async def get_me(current_user: dict = Depends(get_current_user)):
+    """
+    Protected endpoint. Returns the authenticated user's details extracted
+    from the JWT. Useful for the frontend to verify a stored token is still valid.
+    """
+    return {
+        "id": current_user.get("id"),
+        "name": current_user.get("name"),
+        "email": current_user.get("sub"),
+    }
 
 
 # ── Internal: run the AutoGen team and stream results into Cosmos DB (Your Code) ──
@@ -353,3 +439,5 @@ async def get_recent_global_logs():
                 "type": msg.get("type"),
             })
     return {"logs": global_logs}
+
+

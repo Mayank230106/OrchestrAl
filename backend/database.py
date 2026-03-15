@@ -16,6 +16,7 @@ class CosmosDBService:
         self.vector_container = None
         self.mcp_container = None
         self.calendar_container = None  # Added for Calendar Events
+        self.users_container = None    # Stores registered user accounts
 
     async def init_db(self):
         print(f"DEBUG: Initializing Cosmos DB connection to {settings.COSMOS_DB_ENDPOINT}")
@@ -78,6 +79,13 @@ class CosmosDBService:
             partition_key=PartitionKey(path="/type")
         )
         print("DEBUG: Container 'calendar_events' ready.")
+
+        # 5. Users Container — one document per registered account
+        self.users_container = await self.db.create_container_if_not_exists(
+            id="users",
+            partition_key=PartitionKey(path="/email")
+        )
+        print("DEBUG: Container 'users' ready.")
 
     # --- CORE WORKFLOW STATE METHODS ---
     async def save_state(self, state_dict: dict):
@@ -185,6 +193,29 @@ class CosmosDBService:
             await self.mcp_container.delete_item(item=mcp_id, partition_key=mcp_id)
         except Exception:
             pass
+
+    # --- USER AUTH METHODS ---
+    async def save_user(self, user_dict: dict):
+        """Upsert a user document. `id` and the partition key (`email`) must be present."""
+        await self.users_container.upsert_item(body=user_dict)
+
+    async def get_user_by_email(self, email: str) -> dict:
+        """Look up a user by their email address. Returns None if not found."""
+        try:
+            # Try the fast single-item read first (uses the partition key directly)
+            return await self.users_container.read_item(item=email, partition_key=email)
+        except Exception:
+            # Fall back to a query in case the id differs from email
+            try:
+                query = "SELECT * FROM c WHERE c.email = @email"
+                parameters = [{"name": "@email", "value": email}]
+                async for item in self.users_container.query_items(
+                    query=query, parameters=parameters
+                ):
+                    return item
+            except Exception as e:
+                print(f"Error looking up user by email '{email}': {e}")
+        return None
 
     # --- CALENDAR METHODS (Added from friend's code) ---
     async def save_calendar_event(self, event: dict):

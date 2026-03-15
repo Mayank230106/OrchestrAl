@@ -37,3 +37,27 @@ class UserProfile(BaseModel):
     github_url: str
     bio: str
     skills: List[str]
+
+
+# ── Auth Schemas ─────────────────────────────────────────────────────────────
+
+class SignupRequest(BaseModel):
+    name: str = Field(..., min_length=1, description="User's display name")
+    email: str = Field(..., description="User's email address")
+    password: str = Field(..., min_length=8, description="Must be at least 8 characters")
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+class AuthUserResponse(BaseModel):
+    """Safe user object returned to the client — never includes the password hash."""
+    id: str
+    name: str
+    email: str
+    created_at: str
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: AuthUserResponse
