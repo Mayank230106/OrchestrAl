@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
 import { getRecentLogs } from '../lib/api';
+import { useAuth } from '../context/AuthContext';
 import {
   TerminalSquare, Search, Filter, Download,
   Play, Pause, AlertCircle, CheckCircle2, Info, AlertTriangle,
@@ -44,6 +45,7 @@ const formatContent = (content) => {
 const AGENT_TABS = ['All', 'Planner', 'Researcher', 'Executor', 'Reviewer', 'System'];
 
 const Logs = () => {
+  const { token } = useAuth();
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -52,10 +54,11 @@ const Logs = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    getRecentLogs()
+    if (!token) return;
+    getRecentLogs(token)
       .then((data) => { setLogs(data); setLoading(false); })
       .catch((err) => { setError(err.message); setLoading(false); });
-  }, []);
+  }, [token]);
 
   const filtered = logs.filter((log) => {
     const agentMatch = activeTab === 'All' || log.agent === activeTab;

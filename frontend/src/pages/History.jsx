@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
 import { getHistory, getWorkflowDetail, deleteWorkflow } from '../lib/api';
+import { useAuth } from '../context/AuthContext';
 import {
   Search, CheckCircle2, XCircle, Clock, Calendar, ChevronRight,
   Activity, Loader2, Inbox, AlertCircle, X, Bot, Terminal,
@@ -59,7 +60,7 @@ const formatContent = (content) => {
 
 // ── Detail Slide-Over ─────────────────────────────────────────────────────────
 
-const DetailPanel = ({ sessionId, task, onClose }) => {
+const DetailPanel = ({ token, sessionId, task, onClose }) => {
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -68,10 +69,10 @@ const DetailPanel = ({ sessionId, task, onClose }) => {
     if (!sessionId) return;
     setLoading(true);
     setError(null);
-    getWorkflowDetail(sessionId)
+    getWorkflowDetail(token, sessionId)
       .then((data) => { setDetail(data); setLoading(false); })
       .catch((err) => { setError(err.message); setLoading(false); });
-  }, [sessionId]);
+  }, [token, sessionId]);
 
   const meta = STATUS_META[task?.status] || { label: task?.status, icon: Activity, cls: 'bg-gray-100 text-gray-600' };
   const StatusIcon = meta.icon;
@@ -208,18 +209,20 @@ const DetailPanel = ({ sessionId, task, onClose }) => {
 // ── History Page ──────────────────────────────────────────────────────────────
 
 const History = () => {
+  const { token } = useAuth();   // grab the JWT so we can filter history by user
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
-  const [selectedTask, setSelectedTask] = useState(null);   // { sessionId, task }
+  const [selectedTask, setSelectedTask] = useState(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
 
   useEffect(() => {
-    getHistory()
+    if (!token) return;
+    getHistory(token)
       .then((data) => { setTasks(data); setLoading(false); })
       .catch((err) => { setError(err.message); setLoading(false); });
-  }, []);
+  }, [token]);
 
   const filtered = tasks.filter((t) =>
     (t.original_prompt || t.session_id || '').toLowerCase().includes(search.toLowerCase())
@@ -239,7 +242,7 @@ const History = () => {
   const confirmDelete = async () => {
     if (!deleteConfirmId) return;
     try {
-      await deleteWorkflow(deleteConfirmId);
+      await deleteWorkflow(token, deleteConfirmId);
       setTasks(prev => prev.filter(t => t.session_id !== deleteConfirmId));
       setDeleteConfirmId(null);
     } catch (err) {
@@ -381,6 +384,7 @@ const History = () => {
       {/* Slide-over detail panel */}
       {selectedTask && (
         <DetailPanel
+          token={token}
           sessionId={selectedTask.sessionId}
           task={selectedTask.task}
           onClose={closeDetail}

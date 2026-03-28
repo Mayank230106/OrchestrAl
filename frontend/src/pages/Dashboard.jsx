@@ -6,8 +6,10 @@ import Chat from '../components/Chat';
 import Active from '../components/Active';
 import CommandLine from '../components/CommandLine';
 import { startWorkflow, streamWorkflow, approveWorkflow, getMcpConfigs } from '../lib/api';
+import { useAuth } from '../context/AuthContext';
 
 const Dashboard = () => {
+  const { token } = useAuth();   // needed to tag workflows with owner_email
   const [activeStep, setActiveStep] = useState(-1);
   const [workflowStatus, setWorkflowStatus] = useState('IDLE'); // 'IDLE' | 'ACTIVE' | 'PAUSED_FOR_HITL' | 'COMPLETED'
   const [currentSessionId, setCurrentSessionId] = useState(null);
@@ -165,7 +167,7 @@ const Dashboard = () => {
       const mcpConfigs = await getMcpConfigs();
       const activeMcpIds = mcpConfigs.filter(c => c.is_active).map(c => c.id);
 
-      const data = await startWorkflow(inputText.trim(), activeMcpIds);
+      const data = await startWorkflow(token, inputText.trim(), activeMcpIds);
       setCurrentSessionId(data.session_id);
       openStream(data.session_id);
     } catch (error) {

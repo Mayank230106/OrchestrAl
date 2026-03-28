@@ -118,34 +118,80 @@ class CosmosDBService:
             print(f"Error deleting state {session_id}: {str(e)}")
 
     # --- USER PROFILE & HISTORY METHODS ---
-    async def get_all_workflows(self):
-        query = "SELECT c.id, c.session_id, c.status, c.original_prompt, c.created_at, c.updated_at FROM c ORDER BY c.created_at DESC"
-        items = self.container.query_items(query=query)
+    async def get_all_workflows(self, email: str = None):
+        """
+        Return workflow summaries. When an email is supplied, only that user's
+        sessions come back. Without an email all sessions are returned (admin mode).
+        """
+        if email:
+            query = (
+                "SELECT c.id, c.session_id, c.status, c.original_prompt, "
+                "c.created_at, c.updated_at FROM c "
+                "WHERE c.owner_email = @email "
+                "ORDER BY c.created_at DESC"
+            )
+            items = self.container.query_items(
+                query=query,
+                parameters=[{"name": "@email", "value": email}]
+            )
+        else:
+            query = (
+                "SELECT c.id, c.session_id, c.status, c.original_prompt, "
+                "c.created_at, c.updated_at FROM c ORDER BY c.created_at DESC"
+            )
+            items = self.container.query_items(query=query)
         return [item async for item in items]
 
-    async def get_recent_logs(self):
-        query = "SELECT c.session_id, c.chat_history FROM c WHERE IS_DEFINED(c.chat_history) ORDER BY c.created_at DESC OFFSET 0 LIMIT 10"
-        items = self.container.query_items(query=query)
+    async def get_recent_logs(self, email: str = None):
+        if email:
+            query = (
+                "SELECT c.session_id, c.chat_history FROM c "
+                "WHERE IS_DEFINED(c.chat_history) AND c.owner_email = @email "
+                "ORDER BY c.created_at DESC OFFSET 0 LIMIT 10"
+            )
+            items = self.container.query_items(query=query, parameters=[{"name": "@email", "value": email}])
+        else:
+            query = "SELECT c.session_id, c.chat_history FROM c WHERE IS_DEFINED(c.chat_history) ORDER BY c.created_at DESC OFFSET 0 LIMIT 10"
+            items = self.container.query_items(query=query)
         return [item async for item in items]
 
-    async def get_user_profile(self, user_id: str = "default_user") -> dict:
+    async def get_user_profile(self, email: str) -> dict:
+        """
+        Return a user's profile data. We look up their document from the `users`
+        container by email, then pull out just the profile-related fields.
+        If they've never saved a profile, sensible empty defaults come back.
+        """
         try:
-            return await self.container.read_item(item=f"profile_{user_id}", partition_key=f"profile_{user_id}")
-        except Exception:
+            user = await self.get_user_by_email(email)
+            if not user:
+                return {"full_name": "", "role": "", "bio": "", "skills": [], "socials": {}, "email": email}
             return {
-                "id": f"profile_{user_id}",
-                "session_id": f"profile_{user_id}",
-                "full_name": "Priya Sharma",
-                "github_username": "shashank2327",
-                "github_url": "https://github.com/shashank2327",
-                "bio": "Project Manager exploring Multi-Agent AI.",
-                "skills": ["Python", "React", "Azure"]
+                "email":     user.get("email", email),
+                "full_name": user.get("full_name", user.get("name", "")),
+                "role":      user.get("role", ""),
+                "bio":       user.get("bio", ""),
+                "skills":    user.get("skills", []),
+                "socials":   user.get("socials", {"github": "", "linkedin": "", "twitter": "", "website": ""}),
             }
+        except Exception as e:
+            print(f"Error fetching profile for {email}: {e}")
+            return {"full_name": "", "role": "", "bio": "", "skills": [], "socials": {}, "email": email}
 
-    async def save_user_profile(self, profile_data: dict):
-        profile_data["id"] = f"profile_{profile_data['user_id']}"
-        profile_data["session_id"] = f"profile_{profile_data['user_id']}"
-        await self.container.upsert_item(body=profile_data)
+    async def save_user_profile(self, email: str, profile_data: dict):
+        """
+        Merge incoming profile fields into the existing user document.
+        Email and password_hash are never touched here.
+        """
+        user = await self.get_user_by_email(email)
+        if not user:
+            raise ValueError(f"No user found with email: {email}")
+        # Merge only the safe, editable profile fields
+        user["full_name"] = profile_data.get("full_name", user.get("full_name", ""))
+        user["role"]      = profile_data.get("role", user.get("role", ""))
+        user["bio"]       = profile_data.get("bio", user.get("bio", ""))
+        user["skills"]    = profile_data.get("skills", user.get("skills", []))
+        user["socials"]   = profile_data.get("socials", user.get("socials", {}))
+        await self.users_container.upsert_item(body=user)
 
     async def get_recent_sessions(self, limit: int = None) -> list:
         query = "SELECT * FROM c"
@@ -225,11 +271,17 @@ class CosmosDBService:
             event["type"] = "MEETING" # Default partition key
         await self.calendar_container.upsert_item(body=event)
 
-    async def get_calendar_events(self) -> list:
-        query = "SELECT * FROM c ORDER BY c.start_time ASC"
+    async def get_calendar_events(self, email: str = None) -> list:
+        if email:
+            query = "SELECT * FROM c WHERE c.owner_email = @email ORDER BY c.start_time ASC"
+            items = self.calendar_container.query_items(query=query, parameters=[{"name": "@email", "value": email}])
+        else:
+            query = "SELECT * FROM c ORDER BY c.start_time ASC"
+            items = self.calendar_container.query_items(query=query)
+            
         events = []
         try:
-            async for item in self.calendar_container.query_items(query=query):
+            async for item in items:
                 events.append(item)
             return events
         except Exception as e:

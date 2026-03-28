@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
 import { getCalendarEvents } from '../lib/api';
+import { useAuth } from '../context/AuthContext';
 import { Calendar as CalendarIcon, Clock, ChevronLeft, ChevronRight, MapPin, Tag, RefreshCw, AlertCircle } from 'lucide-react';
 import {
     format,
@@ -20,6 +21,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Calendar = () => {
+    const { token } = useAuth();
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [events, setEvents] = useState([]);
@@ -27,15 +29,16 @@ const Calendar = () => {
     const [error, setError] = useState(null);
 
     const fetchEvents = async () => {
+        if (!token) return;
         try {
             setLoading(true);
             setError(null);
-            const data = await getCalendarEvents();
+            const data = await getCalendarEvents(token);
             // Ensure we have an array of events
             setEvents(Array.isArray(data) ? data : []);
         } catch (err) {
             console.error("Failed to fetch events:", err);
-            setError("Failed to load global calendar events.");
+            setError("Failed to load your calendar events.");
         } finally {
             setLoading(false);
         }
@@ -43,7 +46,7 @@ const Calendar = () => {
 
     useEffect(() => {
         fetchEvents();
-    }, []);
+    }, [token]);
 
     const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
     const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
@@ -277,10 +280,10 @@ const Calendar = () => {
                                 </div>
                                 <div>
                                     <h1 className="text-3xl font-bold tracking-tight text-slate-900 mb-2">
-                                        Global Calendar
+                                        My Calendar
                                     </h1>
                                     <p className="text-slate-500 max-w-xl leading-relaxed">
-                                        View the shared timeline of all agent-scheduled events and upcoming workflow milestones.
+                                        View the timeline of all agent-scheduled events and upcoming workflow milestones.
                                     </p>
                                 </div>
                             </div>

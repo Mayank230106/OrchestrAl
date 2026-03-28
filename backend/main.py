@@ -9,7 +9,10 @@ import datetime
 import json
 import asyncio
 
-from backend.schemas import TaskRequest, WorkflowState, ApprovalRequest, UserProfile, ChatRequest, SignupRequest, LoginRequest, TokenResponse
+from backend.schemas import (
+    TaskRequest, WorkflowState, ApprovalRequest, UserProfile, ChatRequest,
+    SignupRequest, LoginRequest, TokenResponse, ProfileUpdateRequest
+)
 from backend.database import db_service
 from backend.config import settings
 from backend.team import build_orchestrai_team
@@ -159,7 +162,10 @@ async def run_workflow(session_id: str, prompt: str, resume_feedback: str = None
     if not db_state:
         return
 
-    team = build_orchestrai_team(is_approved=db_state.get("is_approved", False))
+    team = build_orchestrai_team(
+        is_approved=db_state.get("is_approved", False),
+        owner_email=db_state.get("owner_email")
+    )
 
     if db_state.get("autogen_state"):
         # AutoGen's `TextMentionTermination` searches the entire message history. 
@@ -225,7 +231,12 @@ async def run_workflow(session_id: str, prompt: str, resume_feedback: str = None
 # ── Core Workflow Endpoints ───────────────────────────────────────────────────
 
 @app.post("/api/workflow/start")
-async def start_workflow(request: TaskRequest, background_tasks: BackgroundTasks):
+async def start_workflow(
+    request: TaskRequest,
+    background_tasks: BackgroundTasks,
+    # Optional auth — anonymous usage still works if the token is absent
+    current_user: dict = Depends(get_current_user)
+):
     session_id = request.session_id or f"ORCH-{str(uuid.uuid4())[:8].upper()}"
     enabled_mcps = getattr(request, "enabled_mcps", [])
     hitl_enabled = getattr(request, "hitl_enabled", True)
@@ -235,6 +246,7 @@ async def start_workflow(request: TaskRequest, background_tasks: BackgroundTasks
         "status": "ACTIVE",
         "original_prompt": request.prompt,
         "is_approved": False,
+        "owner_email": current_user["sub"],  # tag this session to the logged-in user
         "chat_history": [
             {"agent": "User", "role": "user", "content": request.prompt}
         ],
@@ -398,16 +410,19 @@ async def delete_mcp_config(mcp_id: str):
 # ── EXACT: New Global Calendar Endpoint ───────────────────────────────────────
 
 @app.get("/api/calendar")
-async def get_calendar_events():
-    events = await db_service.get_calendar_events()
+async def get_calendar_events(current_user: dict = Depends(get_current_user)):
+    email = current_user["sub"]
+    events = await db_service.get_calendar_events(email=email)
     return {"events": events}
 
 
 # ── Existing History, Profile, and Logs Endpoints (Your Code) ─────────────────
 
 @app.get("/api/history")
-async def get_history():
-    workflows = await db_service.get_all_workflows()
+async def get_history(current_user: dict = Depends(get_current_user)):
+    """Returns only the workflows belonging to the logged-in user."""
+    email = current_user["sub"]
+    workflows = await db_service.get_all_workflows(email=email)
     return {"tasks": workflows}
 
 @app.get("/api/workflow/{session_id}")
@@ -418,17 +433,36 @@ async def get_workflow_detail(session_id: str):
     return state
 
 @app.get("/api/profile")
-async def get_profile():
-    return await db_service.get_user_profile()
+async def get_profile(current_user: dict = Depends(get_current_user)):
+    """
+    Return the logged-in user's profile data.
+    Email is always pulled from the validated JWT — it cannot be spoofed.
+    """
+    email = current_user["sub"]
+    return await db_service.get_user_profile(email)
+
 
 @app.put("/api/profile")
-async def update_profile(profile: UserProfile):
-    await db_service.save_user_profile(profile.model_dump())
-    return {"status": "Profile updated successfully"}
+async def update_profile(
+    profile: ProfileUpdateRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Save editable profile fields for the logged-in user.
+    Email is read from the JWT and never accepted from the request body.
+    """
+    email = current_user["sub"]
+    try:
+        await db_service.save_user_profile(email, profile.model_dump())
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    # Return the freshly saved profile so the frontend can update its state
+    return await db_service.get_user_profile(email)
 
 @app.get("/api/logs/recent")
-async def get_recent_global_logs():
-    recent_runs = await db_service.get_recent_logs()
+async def get_recent_global_logs(current_user: dict = Depends(get_current_user)):
+    email = current_user["sub"]
+    recent_runs = await db_service.get_recent_logs(email=email)
     global_logs = []
     for run in recent_runs:
         for msg in run.get("chat_history", []):

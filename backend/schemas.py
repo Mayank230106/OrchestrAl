@@ -60,4 +60,25 @@ class AuthUserResponse(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
-    user: AuthUserResponse
+    user: AuthUserResponse
+
+
+# ── Profile Schemas ───────────────────────────────────────────────────────────
+
+class SocialsData(BaseModel):
+    """Social/web presence links — all optional."""
+    github: str = ""
+    linkedin: str = ""
+    twitter: str = ""
+    website: str = ""
+
+class ProfileUpdateRequest(BaseModel):
+    """
+    Fields from Profile.jsx that the user is allowed to change.
+    Email is intentionally excluded here — it comes from the JWT and is read-only.
+    """
+    full_name: str = Field(..., min_length=1)
+    role: str = ""
+    bio: str = ""
+    skills: List[str] = []
+    socials: SocialsData = SocialsData()

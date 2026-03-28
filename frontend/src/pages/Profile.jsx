@@ -1,31 +1,59 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    ShieldCheck,Save, User, Camera, Globe, Github, Linkedin, Twitter, X, Plus, Activity, CheckCircle2, XCircle,
-    ShieldAlert, Zap, ArrowRight, Calendar as CalendarIcon, Mail
+    ShieldCheck, Save, User, Camera, Globe, Github, Linkedin, Twitter, X, Plus, Activity, CheckCircle2, XCircle,
+    ShieldAlert, Zap, ArrowRight, Calendar as CalendarIcon, Mail, AlertCircle
 } from 'lucide-react';
+import { getProfile, updateProfile } from '../lib/api';
+import { useAuth } from '../context/AuthContext';
 
 const Profile = () => {
-    // State initialized with user data
-    const [formData, setFormData] = useState({
-        fullName: 'Shashank',
-        role: 'Software Engineer',
-        bio: 'Passionate about competitive programming, scalable web development, and multi-agent cloud architectures.',
-        email: 'shashank@example.com',
-        socials: {
-            github: 'shashank2327',
-            twitter: '',
-            linkedin: '',
-            website: ''
-        }
-    });
+    const { token, user: authUser } = useAuth();
 
-    const [skills, setSkills] = useState(['Java', 'C++', 'JavaScript', 'AWS', 'Docker', 'React']);
+    // Form state — mirroring the ProfileUpdateRequest schema on the backend
+    const [formData, setFormData] = useState({
+        fullName: '',
+        role: '',
+        bio: '',
+        // Email comes from the JWT; it's shown read-only and never sent in PUT body
+        email: authUser?.email || '',
+        socials: { github: '', twitter: '', linkedin: '', website: '' }
+    });
+    const [skills, setSkills] = useState([]);
     const [skillInput, setSkillInput] = useState('');
     const [isSaving, setIsSaving] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [saved, setSaved] = useState(false);
+    const [error, setError] = useState('');
+
+    // Load the user's saved profile from the backend when the page mounts
+    useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const data = await getProfile(token);
+                setFormData({
+                    fullName: data.full_name || '',
+                    role:     data.role      || '',
+                    bio:      data.bio       || '',
+                    email:    data.email     || authUser?.email || '',
+                    socials: {
+                        github:   data.socials?.github   || '',
+                        twitter:  data.socials?.twitter  || '',
+                        linkedin: data.socials?.linkedin  || '',
+                        website:  data.socials?.website  || '',
+                    }
+                });
+                setSkills(data.skills || []);
+            } catch (err) {
+                setError('Could not load your profile. Please refresh and try again.');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchProfile();
+    }, [token]);
 
     const handleAddSkill = (e) => {
         if (e.key === 'Enter' && skillInput.trim() !== '') {
@@ -41,14 +69,33 @@ const Profile = () => {
         setSkills(skills.filter(skill => skill !== skillToRemove));
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         setIsSaving(true);
-        setTimeout(() => {
-            setIsSaving(false);
+        setError('');
+        try {
+            // Build the payload that matches ProfileUpdateRequest — no email field
+            const payload = {
+                full_name: formData.fullName,
+                role:      formData.role,
+                bio:       formData.bio,
+                skills:    skills,
+                socials: {
+                    github:   formData.socials.github,
+                    linkedin: formData.socials.linkedin,
+                    twitter:  formData.socials.twitter,
+                    website:  formData.socials.website,
+                },
+            };
+            await updateProfile(token, payload);
             setSaved(true);
             setTimeout(() => setSaved(false), 3000);
-        }, 1000);
+        } catch (err) {
+            setError(err.message || 'Could not save profile. Please try again.');
+        } finally {
+            setIsSaving(false);
+        }
     };
+
 
     // Animation variants for the Bento grid
     const itemVariants = {
@@ -73,28 +120,52 @@ const Profile = () => {
                             </div>
                             <button 
                                 onClick={handleSave}
-                                disabled={isSaving}
+                                disabled={isSaving || isLoading}
                                 className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold shadow-md transition-all ${
-                                    saved ? 'bg-emerald-500 text-white' : 'bg-black text-white hover:bg-gray-800 hover:scale-105 active:scale-95'
+                                    saved ? 'bg-emerald-500 text-white' : 'bg-black text-white hover:bg-gray-800 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100'
                                 }`}
                             >
                                 {isSaving ? (
                                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                                 ) : saved ? (
-                                    <><CheckCircle2 size={18} /> Saved</>
+                                    <><CheckCircle2 size={18} /> Saved!</>
                                 ) : (
                                     <><Save size={18} /> Save Profile</>
                                 )}
                             </button>
                         </div>
 
-                        {/* Bento Grid Layout */}
+                        {/* Error banner */}
+                        {error && (
+                            <div className="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded-2xl text-sm font-medium mb-6">
+                                <AlertCircle size={18} className="shrink-0" />
+                                <span className="flex-1">{error}</span>
+                                <button onClick={() => setError('')} className="text-red-400 hover:text-red-600 transition-colors">
+                                    <X size={16} />
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Loading skeleton */}
+                        {isLoading && (
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-pulse">
+                                <div className="lg:col-span-2 bg-white rounded-3xl border border-gray-200 h-64" />
+                                <div className="bg-white rounded-3xl border border-gray-200 h-64" />
+                                <div className="bg-white rounded-3xl border border-gray-200 h-48" />
+                                <div className="lg:col-span-2 bg-white rounded-3xl border border-gray-200 h-48" />
+                            </div>
+                        )}
+
+
+                        {/* Bento Grid Layout — only shown once profile data has loaded */}
+                        {!isLoading && (
                         <motion.div 
                             initial="hidden"
                             animate="visible"
                             variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
                             className="grid grid-cols-1 lg:grid-cols-3 gap-6"
                         >
+
                             {/* Card 1: Main Identity (Spans 2 columns) */}
                             <motion.div variants={itemVariants} className="lg:col-span-2 bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden group hover:shadow-md transition-shadow">
                                 {/* Abstract Dark Cover Photo */}
@@ -261,7 +332,9 @@ const Profile = () => {
                             </motion.div>
 
                         </motion.div>
+                        )} {/* end !isLoading */}
                     </div>
+
                 </main>
             </div>
         </div>

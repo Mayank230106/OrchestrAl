@@ -3,10 +3,13 @@ const BASE_URL = '/api';
 
 // ─── Workflow ───────────────────────────────────────────────────────────────
 
-export async function startWorkflow(prompt, enabled_mcps = []) {
+export async function startWorkflow(token, prompt, enabled_mcps = []) {
   const res = await fetch(`${BASE_URL}/workflow/start`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
     body: JSON.stringify({ prompt, enabled_mcps }),
   });
   if (!res.ok) throw new Error(`Failed to start workflow: ${res.statusText}`);
@@ -30,22 +33,27 @@ export async function approveWorkflow(sessionId, approved, feedback = '') {
 
 // ─── History ─────────────────────────────────────────────────────────────────
 
-export async function getHistory() {
-  const res = await fetch(`${BASE_URL}/history`);
+export async function getHistory(token) {
+  const res = await fetch(`${BASE_URL}/history`, {
+    headers: { 'Authorization': `Bearer ${token}` },
+  });
   if (!res.ok) throw new Error(`Failed to fetch history: ${res.statusText}`);
   const data = await res.json();
   return data.tasks || [];
 }
 
-export async function getWorkflowDetail(sessionId) {
-  const res = await fetch(`${BASE_URL}/workflow/${sessionId}`);
+export async function getWorkflowDetail(token, sessionId) {
+  const res = await fetch(`${BASE_URL}/workflow/${sessionId}`, {
+    headers: { 'Authorization': `Bearer ${token}` },
+  });
   if (!res.ok) throw new Error(`Failed to fetch workflow: ${res.statusText}`);
   return res.json(); // full state including chat_history
 }
 
-export async function deleteWorkflow(sessionId) {
+export async function deleteWorkflow(token, sessionId) {
   const res = await fetch(`${BASE_URL}/workflow/${sessionId}`, {
     method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${token}` },
   });
   if (!res.ok) throw new Error(`Failed to delete workflow: ${res.statusText}`);
   return res.json();
@@ -53,8 +61,10 @@ export async function deleteWorkflow(sessionId) {
 
 // ─── Logs ─────────────────────────────────────────────────────────────────────
 
-export async function getRecentLogs() {
-  const res = await fetch(`${BASE_URL}/logs/recent`);
+export async function getRecentLogs(token) {
+  const res = await fetch(`${BASE_URL}/logs/recent`, {
+    headers: { 'Authorization': `Bearer ${token}` },
+  });
   if (!res.ok) throw new Error(`Failed to fetch logs: ${res.statusText}`);
   const data = await res.json();
   return data.logs || []; // array of { session_id, agent, content, type }
@@ -62,20 +72,28 @@ export async function getRecentLogs() {
 
 // ─── Profile ─────────────────────────────────────────────────────────────────
 
-export async function getProfile() {
-  const res = await fetch(`${BASE_URL}/profile`);
+export async function getProfile(token) {
+  const res = await fetch(`${BASE_URL}/profile`, {
+    headers: { 'Authorization': `Bearer ${token}` },
+  });
   if (!res.ok) throw new Error(`Failed to fetch profile: ${res.statusText}`);
-  return res.json(); // { full_name, github_username, github_url, bio, skills }
+  return res.json(); // { email, full_name, role, bio, skills, socials }
 }
 
-export async function updateProfile(profileData) {
+export async function updateProfile(token, profileData) {
   const res = await fetch(`${BASE_URL}/profile`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
     body: JSON.stringify(profileData),
   });
-  if (!res.ok) throw new Error(`Failed to update profile: ${res.statusText}`);
-  return res.json();
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || `Failed to update profile: ${res.statusText}`);
+  }
+  return res.json(); // returns the freshly saved profile
 }
 
 // ─── MCP Settings ─────────────────────────────────────────────────────────────
@@ -108,8 +126,10 @@ export async function deleteMcpConfig(mcpId) {
 // ─── Calendar ─────────────────────────────────────────────────────────────────
 
 /** Global Calendar Data Retrieval */
-export async function getCalendarEvents() {
-    const res = await fetch(`${BASE_URL}/calendar`);
+export async function getCalendarEvents(token) {
+    const res = await fetch(`${BASE_URL}/calendar`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+    });
     if (!res.ok) throw new Error('Failed to fetch calendar events');
     const data = await res.json();
     return data.events || [];

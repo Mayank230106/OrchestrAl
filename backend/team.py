@@ -5,10 +5,10 @@ from autogen_agentchat.conditions import TextMentionTermination, MaxMessageTermi
 from autogen_ext.models.openai import OpenAIChatCompletionClient
 from backend.config import settings
 # Added new calendar, time, and email tools from friend's code
-from backend.tools import duckduckgo_tool, calendar_tool, global_calendar_tool, current_time_tool, email_tool
+from backend.tools import duckduckgo_tool, calendar_tool, current_time_tool, email_tool, GlobalEventParams
 import datetime
 
-def build_orchestrai_team(is_approved: bool = False, extra_tools: list = None, hitl_enabled: bool = True):
+def build_orchestrai_team(is_approved: bool = False, extra_tools: list = None, hitl_enabled: bool = True, owner_email: str = None):
     # model_info is required for non-OpenAI model names
     from autogen_core.models import ModelInfo
 
@@ -38,6 +38,33 @@ def build_orchestrai_team(is_approved: bool = False, extra_tools: list = None, h
     researcher_client = make_client(settings.GROQ_API_KEY_1, settings.GROQ_MODEL_1)
     executor_client   = make_client(settings.GROQ_API_KEY_1, settings.GROQ_MODEL_1)
     finalizer_client  = make_client(settings.GROQ_API_KEY_2, getattr(settings, "FINALIZER_MODEL", settings.GROQ_MODEL_2))
+
+    # -- Dynamic Tools Bound to User Context --
+    import uuid
+    from backend.database import db_service
+    from autogen_core.tools import FunctionTool
+    
+    async def custom_add_global_event(params: GlobalEventParams) -> str:
+        """Saves an event/reminder to the Calendar. Visible to this user."""
+        event_id = f"EVT-{uuid.uuid4().hex[:8].upper()}"
+        event_data = {
+            "id": event_id,
+            "title": params.title,
+            "start_time": params.start_time,
+            "end_time": params.end_time,
+            "description": params.description,
+            "type": params.type
+        }
+        if owner_email:
+            event_data["owner_email"] = owner_email
+            
+        try:
+            await db_service.save_calendar_event(event_data)
+            return f"SUCCESS: Global {params.type.lower()} scheduled: '{params.title}' at {params.start_time}. ID: {event_id}"
+        except Exception as e:
+            return f"ERROR: Failed to save to global calendar: {str(e)}"
+
+    global_calendar_tool = FunctionTool(custom_add_global_event, description="Adds an event or reminder to the shared Global Calendar and Timeline.")
 
     # -- Define Agents --
     planner = AssistantAgent(
