@@ -1,5 +1,7 @@
 # Definitions for DuckDuckGo and Outlook tools
 from autogen_core.tools import FunctionTool
+from pydantic import BaseModel, Field
+from duckduckgo_search import DDGS
 import json
 import datetime
 
@@ -44,7 +46,7 @@ async def schedule_meeting(meeting_topic: str) -> str:
     }
     return f"SUCCESS: Outlook Calendar payload staged for execution: {json.dumps(payload)}"
 
-calendar_tool = FunctionTool(book_outlook_meeting, description="Drafts and stages a Microsoft Outlook calendar invite.")
+calendar_tool = FunctionTool(schedule_meeting, description="Drafts and stages a Microsoft Outlook calendar invite.")
 
 
 # --- 3. Global Storage Tools (Shared Intelligence) ---
