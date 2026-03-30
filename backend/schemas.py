@@ -81,4 +81,4 @@ class ProfileUpdateRequest(BaseModel):
     role: str = ""
     bio: str = ""
     skills: List[str] = []
-    socials: SocialsData = SocialsData()
+    socials: SocialsData = SocialsData()

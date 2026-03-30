@@ -33,6 +33,14 @@ app.add_middleware(
 )
 
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # Since it's for local development
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 @app.on_event("startup")
 async def startup_event():
     await db_service.init_db()
@@ -229,6 +237,12 @@ async def run_workflow(session_id: str, prompt: str, resume_feedback: str = None
 
 
 # ── Core Workflow Endpoints ───────────────────────────────────────────────────
+
+@app.get("/api/history")
+async def get_workflow_history():
+    sessions = await db_service.get_recent_sessions()
+    return {"sessions": sessions}
+
 
 @app.post("/api/workflow/start")
 async def start_workflow(

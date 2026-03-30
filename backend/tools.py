@@ -1,7 +1,5 @@
 # Definitions for DuckDuckGo and Outlook tools
 from autogen_core.tools import FunctionTool
-from duckduckgo_search import DDGS
-from pydantic import BaseModel, Field
 import json
 import datetime
 
@@ -33,16 +31,11 @@ async def web_search(params: SearchParams) -> str:
 duckduckgo_tool = FunctionTool(web_search, description="Searches the live internet for up-to-date facts and context.")
 
 
-# --- 2. Enterprise Action Tool (For Executor) ---
-class CalendarParams(BaseModel):
-    attendees: list[str] = Field(..., description="List of email addresses.")
-    subject: str = Field(..., description="Meeting subject.")
-    start_time: str = Field(..., description="ISO 8601 formatted start time.")
-
-async def book_outlook_meeting(params: CalendarParams) -> str:
+# --- 2. Action Tool (For Executor) ---
+async def schedule_meeting(meeting_topic: str) -> str:
     """
-    MOCK IMPLEMENTATION: In production, use azure-identity and msgraph-sdk here.
-    This formats the payload for the Microsoft Graph API.
+    Returns the Cal.com booking link or embed to schedule a meeting.
+    Use this tool whenever the user needs to schedule a call, meeting, or appointment.
     """
     payload = {
         "subject": params.subject,
