@@ -9,16 +9,16 @@ import datetime
 import json
 import asyncio
 
-from backend.schemas import (
+from schemas import (
     TaskRequest, WorkflowState, ApprovalRequest, UserProfile, ChatRequest,
     SignupRequest, LoginRequest, TokenResponse, ProfileUpdateRequest
 )
-from backend.database import db_service
-from backend.config import settings
-from backend.team import build_orchestrai_team
-from backend.auth import hash_password, verify_password, create_access_token, get_current_user
+from database import db_service
+from config import settings
+from team import build_orchestrai_team
+from auth import hash_password, verify_password, create_access_token, get_current_user
 
-from backend.rag import extract_text_from_file, chunk_text, embed_texts
+from rag import extract_text_from_file, chunk_text, embed_texts
 from azure.servicebus.aio import ServiceBusClient
 from azure.servicebus import ServiceBusMessage
 

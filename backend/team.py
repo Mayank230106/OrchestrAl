@@ -3,9 +3,9 @@ from autogen_agentchat.agents import AssistantAgent
 from autogen_agentchat.teams import SelectorGroupChat
 from autogen_agentchat.conditions import TextMentionTermination, MaxMessageTermination
 from autogen_ext.models.openai import OpenAIChatCompletionClient
-from backend.config import settings
+from config import settings
 # Added new calendar, time, and email tools from friend's code
-from backend.tools import duckduckgo_tool, calendar_tool, current_time_tool, email_tool, GlobalEventParams
+from tools import duckduckgo_tool, calendar_tool, current_time_tool, email_tool, GlobalEventParams
 import datetime
 
 def build_orchestrai_team(is_approved: bool = False, extra_tools: list = None, hitl_enabled: bool = True, owner_email: str = None):

@@ -1,6 +1,6 @@
 from typing import Any, Dict, List
 from autogen_core.tools import FunctionTool
-from backend.mcp.base import BaseConnector
+from mcp.base import BaseConnector
 
 def create_autogen_tool(connector: BaseConnector, tool_def: Dict[str, Any]) -> FunctionTool:
     """

@@ -2,7 +2,7 @@
 from azure.cosmos.aio import CosmosClient
 from azure.cosmos import PartitionKey
 from azure.cosmos.exceptions import CosmosHttpResponseError
-from backend.config import settings
+from config import settings
 import datetime
 import numpy as np
 

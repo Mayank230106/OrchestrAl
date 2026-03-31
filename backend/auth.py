@@ -6,7 +6,7 @@ from fastapi import HTTPException, Request, status
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 
-from backend.config import settings
+from config import settings
 
 # We use bcrypt as the hashing algorithm — passlib makes swapping schemes easy later
 _pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
