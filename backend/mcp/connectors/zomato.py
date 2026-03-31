@@ -1,6 +1,6 @@
 import aiohttp
 from typing import Any, Dict, List
-from backend.mcp.base import BaseConnector
+from mcp.base import BaseConnector
 
 class ZomatoConnector(BaseConnector):
     """

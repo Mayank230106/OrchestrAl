@@ -1,7 +1,7 @@
 import aiohttp
 import base64
 from typing import Any, Dict, List, Optional
-from backend.mcp.base import BaseConnector
+from mcp.base import BaseConnector
 
 class SpotifyConnector(BaseConnector):
     """

@@ -2,11 +2,11 @@
 import asyncio
 import json
 from azure.servicebus.aio import ServiceBusClient
-from backend.config import settings
-from backend.database import db_service
-from backend.team import build_orchestrai_team
-from backend.mcp.registry import mcp_registry
-from backend.mcp_utils import get_mcp_tools
+from config import settings
+from database import db_service
+from team import build_orchestrai_team
+from mcp.registry import mcp_registry
+from mcp_utils import get_mcp_tools
 
 async def process_message(msg_payload: dict):
     session_id = msg_payload["session_id"]
