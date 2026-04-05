@@ -6,12 +6,12 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/api': {
-        target: 'https://my-orchtrai-backend-123.azurewebsites.net/',
+      '/apis': {
+        target: '',
         changeOrigin: true,
       },
-      '/auth': {
-        target: 'https://my-orchtrai-backend-123.azurewebsites.net/',
+      '/auths': {
+        target: '',
         changeOrigin: true,
       },
     },
