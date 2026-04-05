@@ -1,5 +1,6 @@
 // Central API service layer — all calls go through the Vite proxy to localhost:8000
 const BASE_URL = '/api';
+const ANO_BASE = '/auth';
 
 // ─── Workflow ───────────────────────────────────────────────────────────────
 
@@ -141,7 +142,7 @@ export async function getCalendarEvents(token) {
 
 /** Register a new account. Throws with the server's error message on failure. */
 export async function signup(name, email, password) {
-    const res = await fetch('/auth/signup', {
+    const res = await fetch(`${ANO_BASE}/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password }),
@@ -156,7 +157,7 @@ export async function signup(name, email, password) {
 
 /** Log in and receive a JWT + user object. Throws on bad credentials. */
 export async function login(email, password) {
-    const res = await fetch('/auth/login', {
+    const res = await fetch(`${ANO_BASE}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -170,7 +171,7 @@ export async function login(email, password) {
 
 /** Verify a stored token is still valid and fetch the current user object. */
 export async function getMe(token) {
-    const res = await fetch('/auth/me', {
+    const res = await fetch(`${ANO_BASE}/me`, {
         headers: { 'Authorization': `Bearer ${token}` },
     });
     if (!res.ok) throw new Error('Token invalid or expired.');

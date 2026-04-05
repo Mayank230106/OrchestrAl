@@ -18,4 +18,8 @@ numpy
 pdfplumber
 sentence-transformers
 python-dotenv
+<<<<<<< HEAD
 
+=======
+python-multipart
+>>>>>>> 519d705 (deploy frontend again)

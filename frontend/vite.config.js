@@ -7,11 +7,11 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: 'https://my-orchtrai-backend-123.azurewebsites.net/',
         changeOrigin: true,
       },
       '/auth': {
-        target: 'http://localhost:8000',
+        target: 'https://my-orchtrai-backend-123.azurewebsites.net/',
         changeOrigin: true,
       },
     },
