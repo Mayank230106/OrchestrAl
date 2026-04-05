@@ -1,4 +1,6 @@
 // Central API service layer — all calls go through the Vite proxy to localhost:8000
+const API_URL = import.meta.env.VITE_API_URL;
+
 const BASE_URL = '/api';
 const ANO_BASE = '/auth';
 
