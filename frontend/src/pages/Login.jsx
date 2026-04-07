@@ -129,8 +129,8 @@ const Login = () => {
             </div>
 
             {/* Right Side - Form (Light Mode) */}
-            <div className="flex-1 flex items-center justify-center p-8 sm:p-12 lg:p-24 bg-white relative">
-                <div className="absolute top-8 left-8 flex items-center gap-2 lg:hidden">
+            <div className="flex-1 flex flex-col items-center justify-center p-8 sm:p-12 lg:p-24 bg-white relative">
+                <div className="self-start mb-8 flex items-center gap-2 lg:hidden">
                     <div className="bg-black text-white p-1.5 rounded-lg">
                         <Zap size={20} fill="currentColor" />
                     </div>

@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Sidebar from '../components/Sidebar';
-import Navbar from '../components/Navbar';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     ShieldCheck, Save, User, Camera, Globe, Github, Linkedin, Twitter, X, Plus, Activity, CheckCircle2, XCircle,
@@ -103,17 +101,12 @@ const Profile = () => {
         visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } }
     };
 
-    return (
-        <div className="flex h-screen bg-[#f8fafc] font-sans">
-            <Sidebar />
-            <div className="flex-1 flex flex-col h-screen overflow-hidden">
-                <Navbar />
-                
-                <main className="flex-1 overflow-y-auto p-6 md:p-8">
-                    <div className="max-w-5xl mx-auto py-4">
+  return (
+    <div className="flex-1 w-full bg-[#f8fafc] font-sans h-full p-4 md:p-8">
+      <div className="max-w-5xl mx-auto py-4">
                         
                         {/* Action Header */}
-                        <div className="flex items-center justify-between mb-8">
+                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
                             <div>
                                 <h1 className="text-3xl font-bold tracking-tight text-slate-900">My Profile</h1>
                                 <p className="text-slate-500 mt-1">Manage your identity and technical footprint.</p>
@@ -121,7 +114,7 @@ const Profile = () => {
                             <button 
                                 onClick={handleSave}
                                 disabled={isSaving || isLoading}
-                                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold shadow-md transition-all ${
+                                className={`flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold shadow-md transition-all w-full md:w-auto ${
                                     saved ? 'bg-emerald-500 text-white' : 'bg-black text-white hover:bg-gray-800 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100'
                                 }`}
                             >
@@ -333,12 +326,9 @@ const Profile = () => {
 
                         </motion.div>
                         )} {/* end !isLoading */}
-                    </div>
-
-                </main>
-            </div>
-        </div>
-    );
+      </div>
+    </div>
+  );
 };
 
 export default Profile;

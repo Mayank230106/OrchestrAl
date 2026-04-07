@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Sidebar from '../components/Sidebar';
-import Navbar from '../components/Navbar';
 import { Blocks, Plus, Trash2, Power, PowerOff, Zap, Settings2 } from 'lucide-react';
 import { getMcpConfigs, saveMcpConfig, deleteMcpConfig } from '../lib/api';
 import { toast } from 'react-hot-toast';
@@ -84,15 +82,11 @@ const Integrations = () => {
     };
 
     return (
-        <div className="flex h-screen bg-[#f8fafc] font-sans">
-            <Sidebar />
-            <div className="flex-1 flex flex-col h-screen overflow-hidden">
-                <Navbar />
-                <main className="flex-1 overflow-y-auto p-6 md:p-8">
-                    <div className="max-w-5xl mx-auto space-y-10 py-4">
+    <div className="flex-1 w-full bg-[#f8fafc] font-sans h-full p-4 md:p-8">
+          <div className="max-w-5xl mx-auto space-y-10 py-4">
 
                         {/* Page Header */}
-                        <div className="flex items-center justify-between bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
+                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
                             <div className="flex items-start gap-5">
                                 <div className="bg-black text-white p-3 rounded-xl shadow-sm mt-1">
                                     <Blocks size={28} />
@@ -264,10 +258,8 @@ const Integrations = () => {
                             )}
                         </div>
 
-                    </div>
-                </main>
-            </div>
-        </div>
+          </div>
+    </div>
     );
 };
 

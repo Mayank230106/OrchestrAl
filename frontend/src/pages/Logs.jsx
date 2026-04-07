@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Sidebar from '../components/Sidebar';
-import Navbar from '../components/Navbar';
 import { getRecentLogs } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -76,17 +74,11 @@ const Logs = () => {
   };
 
   return (
-    <div className="flex h-screen bg-[#f8fafc] font-sans">
-      <Sidebar />
-
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        <Navbar />
-
-        <main className="flex-1 overflow-y-auto p-6 md:p-8">
+    <div className="flex-1 w-full bg-[#f8fafc] font-sans h-full p-4 md:p-8">
           <div className="max-w-7xl mx-auto space-y-6 h-full flex flex-col">
 
             {/* Page Header */}
-            <div className="flex items-end justify-between">
+            <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2 mb-2 text-slate-500 font-medium">
                   <TerminalSquare size={20} />
@@ -117,7 +109,7 @@ const Logs = () => {
             </div>
 
             {/* Toolbar */}
-            <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex items-center justify-between gap-4">
+            <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div className="flex items-center gap-2 flex-wrap">
                 {AGENT_TABS.map((tab) => (
                   <button
@@ -131,14 +123,14 @@ const Logs = () => {
                 ))}
               </div>
 
-              <div className="relative">
+              <div className="relative w-full md:w-auto">
                 <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search payloads..."
-                  className="pl-9 pr-4 py-1.5 rounded-lg border border-gray-300 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors w-64 text-sm bg-gray-50 focus:bg-white"
+                  className="pl-9 pr-4 py-1.5 rounded-lg border border-gray-300 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors w-full md:w-64 text-sm bg-gray-50 focus:bg-white"
                 />
               </div>
             </div>
@@ -198,8 +190,6 @@ const Logs = () => {
             </div>
 
           </div>
-        </main>
-      </div>
     </div>
   );
 };

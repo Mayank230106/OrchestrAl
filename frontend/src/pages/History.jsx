@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import Sidebar from '../components/Sidebar';
-import Navbar from '../components/Navbar';
 import { getHistory, getWorkflowDetail, deleteWorkflow } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -252,17 +250,12 @@ const History = () => {
   };
 
   return (
-    <div className="flex h-screen bg-[#f8fafc] font-sans">
-      <Sidebar />
-
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        <Navbar />
-
-        <main className="flex-1 overflow-y-auto p-8">
-          <div className="max-w-6xl mx-auto">
-
-            {/* Header */}
-            <div className="flex items-end justify-between mb-8">
+    <>
+      <div className="flex-1 w-full p-4 md:p-8">
+      <div className="max-w-6xl mx-auto">
+        
+        {/* Header */}
+        <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-8 gap-4">
               <div>
                 <h1 className="text-3xl font-bold text-slate-900 mb-2">Task History</h1>
                 <p className="text-gray-500">Click any row to see the full agent conversation.</p>
@@ -280,7 +273,7 @@ const History = () => {
             </div>
 
             {/* Table */}
-            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-x-auto">
               {loading ? (
                 <div className="flex items-center justify-center gap-3 py-24 text-gray-400">
                   <Loader2 size={24} className="animate-spin" /><span>Loading history…</span>
@@ -378,8 +371,7 @@ const History = () => {
               )}
             </div>
           </div>
-        </main>
-      </div>
+    </div>
 
       {/* Slide-over detail panel */}
       {selectedTask && (
@@ -420,7 +412,7 @@ const History = () => {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 

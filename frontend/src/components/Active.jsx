@@ -71,9 +71,9 @@ const Active = ({ activeStep = -1 }) => {
         </div>
       </div>
 
-      <div className="flex items-center justify-between w-full gap-4 flex-1 relative mt-4">
+      <div className="flex flex-col md:flex-row items-center justify-between w-full gap-4 flex-1 relative mt-4">
         {/* Connection Lines Background */}
-        <div className="absolute top-1/2 left-0 w-full h-[2px] bg-slate-100 -translate-y-1/2 -z-10" />
+        <div className="hidden md:block absolute top-1/2 left-0 w-full h-[2px] bg-slate-100 -translate-y-1/2 -z-10" />
 
         {agents.map((agent, index) => (
           <React.Fragment key={agent.id}>
@@ -83,7 +83,7 @@ const Active = ({ activeStep = -1 }) => {
               delay={index * 0.1}
             />
             {index < agents.length - 1 && (
-              <div className="flex-shrink-0 flex justify-center px-2">
+              <div className="flex-shrink-0 flex justify-center px-2 py-2 md:py-0">
                 <motion.div
                   animate={{
                     opacity: activeStep > index ? 1 : 0.3,
@@ -91,7 +91,7 @@ const Active = ({ activeStep = -1 }) => {
                   }}
                   transition={{ repeat: activeStep === index ? Infinity : 0, duration: 1.5 }}
                 >
-                  <ArrowRight className={activeStep > index ? "text-emerald-400" : "text-slate-300"} size={32} />
+                  <ArrowRight className={`transform rotate-90 md:rotate-0 ${activeStep > index ? "text-emerald-400" : "text-slate-300"}`} size={32} />
                 </motion.div>
               </div>
             )}

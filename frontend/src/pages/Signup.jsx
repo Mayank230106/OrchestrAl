@@ -62,15 +62,15 @@ const Signup = () => {
     return (
         <div className="flex min-h-screen bg-white font-sans">
             {/* Left Side - Form (Light Mode) */}
-            <div className="flex-1 flex items-center justify-center p-8 sm:p-12 lg:p-24 bg-white relative order-2 lg:order-1">
-                <div className="absolute top-8 left-8 flex items-center gap-2 lg:hidden">
+            <div className="flex-1 flex flex-col items-center justify-center p-8 sm:p-12 lg:p-24 bg-white relative order-2 lg:order-1">
+                <div className="self-start mb-8 flex items-center gap-2 lg:hidden">
                     <div className="bg-black text-white p-1.5 rounded-lg">
                         <Zap size={20} fill="currentColor" />
                     </div>
                     <span className="text-xl font-bold tracking-tight text-slate-900">OrchestrAl</span>
                 </div>
 
-                <div className="w-full max-w-md space-y-8">
+                <div className="w-full max-w-md space-y-8 mt-12 lg:mt-0">
                     <div className="text-center lg:text-left">
                         <h2 className="text-3xl font-bold text-slate-900 mb-2">Create an account</h2>
                         <p className="text-gray-500">Start delegating complex tasks to your agent team.</p>

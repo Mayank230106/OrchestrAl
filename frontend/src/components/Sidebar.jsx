@@ -9,17 +9,19 @@ import {
   User,
   LogOut,
   Blocks,
-  CalendarDays
+  CalendarDays,
+  MessageSquareDashed
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-const Sidebar = () => {
+const Sidebar = ({ onClose }) => {
   const location = useLocation();
   // Pull the logged-in user and the logout function from global auth state
   const { user, logout } = useAuth();
 
   const navItems = [
     { name: 'Orchestration', icon: LayoutDashboard, path: '/dashboard' },
+    { name: 'Sessions', icon: MessageSquareDashed, path: '/sessions' },
     { name: 'Agent Logs', icon: TerminalSquare, path: '/logs' },
     { name: 'Task History', icon: History, path: '/history' },
     { name: 'Global Calendar', icon: CalendarDays, path: '/calendar' },
@@ -51,6 +53,7 @@ const Sidebar = () => {
             <Link
               key={item.name}
               to={item.path}
+              onClick={onClose}
               className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${isActive
                 ? 'bg-black text-white shadow-md'
                 : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
@@ -89,4 +92,4 @@ const Sidebar = () => {
   );
 };
 
-export default Sidebar;
+export default Sidebar;

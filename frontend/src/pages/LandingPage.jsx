@@ -86,10 +86,6 @@ export default function LandingPage() {
 
             {/* Hero Section */}
             <section className="relative z-10 flex flex-col items-center text-center pt-48 pb-32 px-6 max-w-5xl mx-auto">
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="inline-flex items-center gap-2 bg-white border border-gray-200 px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-8 shadow-sm">
-                    <Activity size={14} className="text-emerald-500" /> Track 4 Agent Teamwork
-                </motion.div>
-                
                 <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="text-6xl md:text-8xl font-black tracking-tighter leading-[0.95] mb-8">
                     Build without <br className="hidden md:block"/> boundaries.
                 </motion.h1>

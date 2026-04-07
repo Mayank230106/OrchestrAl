@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Sidebar from '../components/Sidebar';
-import Navbar from '../components/Navbar';
 import { getCalendarEvents } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { Calendar as CalendarIcon, Clock, ChevronLeft, ChevronRight, MapPin, Tag, RefreshCw, AlertCircle } from 'lucide-react';
@@ -263,17 +261,12 @@ const Calendar = () => {
         );
     };
 
-    return (
-        <div className="flex h-screen bg-[#f8fafc] font-sans">
-            <Sidebar />
-            <div className="flex-1 flex flex-col h-screen overflow-hidden">
-                <Navbar />
-                
-                <main className="flex-1 overflow-y-auto p-6 md:p-8">
-                    <div className="max-w-6xl mx-auto space-y-8 py-4">
+  return (
+    <div className="flex-1 w-full bg-[#f8fafc] font-sans h-full p-4 md:p-8">
+      <div className="max-w-6xl mx-auto space-y-8 py-4">
                         
                         {/* Page Header block matching the Integrations page theme */}
-                        <div className="flex items-center justify-between bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
+                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
                             <div className="flex items-start gap-5">
                                 <div className="bg-black text-white p-3 rounded-xl shadow-sm mt-1">
                                     <CalendarIcon size={28} />
@@ -295,25 +288,23 @@ const Calendar = () => {
                                 <p className="font-medium">{error}</p>
                             </div>
                         ) : (
-                            <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex min-h-[600px]">
+                            <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col md:flex-row min-h-[600px]">
                                 {/* Calendar Grid Section */}
-                                <div className="w-8/12 p-8 border-r border-gray-100 flex flex-col">
+                                <div className="w-full md:w-8/12 p-4 md:p-8 md:border-r border-gray-100 flex flex-col">
                                     {renderHeader()}
                                     {renderDays()}
                                     {renderCells()}
                                 </div>
 
                                 {/* Agenda Panel Section */}
-                                <div className="w-4/12 p-8 bg-gray-50/30">
+                                <div className="w-full md:w-4/12 p-4 md:p-8 bg-gray-50/30">
                                     {renderAgenda()}
                                 </div>
                             </div>
                         )}
                         
-                    </div>
-                </main>
-            </div>
-        </div>
+      </div>
+    </div>
     );
 };
 
